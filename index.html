@@ -238,15 +238,7 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // === CONFIGURACIÓN FIREBASE (Uso de Variables del Entorno) ===
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'casino-royale-local';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            // Fallback config dummy if run outside environment. Will fail without real config, but keeps code syntax valid.
-            projectId: "dummy-project"
-        };
-        
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+       
         const db = getFirestore(app);
 
         // Rutas Estrictas de Colecciones Públicas
