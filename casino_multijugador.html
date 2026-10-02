@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casino Royale - Amigos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        casino: {
+                            dark: '#0f172a',
+                            green: '#064e3b',
+                            gold: '#fbbf24',
+                            red: '#991b1b',
+                            black: '#1e293b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        /* Animaciones para la Ruleta */
+        .spin-anim { animation: spin 2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(1080deg); } }
+        
+        /* Cartas */
+        .card { 
+            background: white; color: black; border-radius: 8px; 
+            width: 80px; height: 120px; display: flex; 
+            align-items: center; justify-content: center; 
+            font-size: 2rem; font-weight: bold; border: 2px solid #cbd5e1;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .card.red { color: #dc2626; }
+        .card.hidden { background: repeating-linear-gradient(45deg, #1e40af, #1e40af 10px, #1d4ed8 10px, #1d4ed8 20px); color: transparent; border-color: white; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 4px; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-casino-dark/95 backdrop-blur-sm">
+        <div class="bg-slate-800 p-8 rounded-xl shadow-2xl border border-casino-gold/30 max-w-sm w-full text-center">
+            <i class="fas fa-crown text-5xl text-casino-gold mb-4"></i>
+            <h1 class="text-3xl font-bold text-white mb-2">Casino VIP</h1>
+            <p class="text-gray-400 mb-6">Ingresa para jugar con tus amigos</p>
+            <input type="text" id="username-input" placeholder="Tu nombre de jugador" class="w-full px-4 py-3 rounded bg-slate-900 border border-slate-600 text-white focus:outline-none focus:border-casino-gold mb-4" autocomplete="off" maxlength="15">
+            <button id="login-btn" class="w-full bg-casino-gold text-black font-bold py-3 rounded hover:bg-yellow-400 transition shadow-[0_0_15px_rgba(251,191,36,0.3)]">
+                Entrar al Casino
+            </button>
+            <p id="login-error" class="text-red-400 text-sm mt-3 hidden">Ingresa un nombre válido.</p>
+        </div>
+    </div>
+
+    <header class="bg-slate-900 border-b border-slate-700 p-4 flex justify-between items-center shrink-0">
+        <div class="flex items-center gap-3">
+            <i class="fas fa-crown text-2xl text-casino-gold"></i>
+            <h1 class="text-xl font-bold hidden sm:block text-casino-gold">Casino Royale</h1>
+        </div>
+        
+        <!-- Navegación Tabs -->
+        <nav class="flex gap-2 sm:gap-4 overflow-x-auto">
+            <button onclick="switchTab('lobby')" id="tab-lobby" class="nav-tab px-3 py-2 rounded-lg bg-slate-800 text-casino-gold border border-casino-gold font-semibold transition">
+                <i class="fas fa-users mr-1"></i> Lobby
+            </button>
+            <button onclick="switchTab('higherlower')" id="tab-higherlower" class="nav-tab px-3 py-2 rounded-lg text-gray-400 hover:text-white transition">
+                <i class="fas fa-sort-numeric-up mr-1"></i> Mayor/Menor
+            </button>
+            <button onclick="switchTab('roulette')" id="tab-roulette" class="nav-tab px-3 py-2 rounded-lg text-gray-400 hover:text-white transition">
+                <i class="fas fa-life-ring mr-1"></i> Ruleta
+            </button>
+            <button onclick="switchTab('blackjack')" id="tab-blackjack" class="nav-tab px-3 py-2 rounded-lg text-gray-400 hover:text-white transition">
+                <i class="fas fa-spade mr-1"></i> Blackjack
+            </button>
+        </nav>
+
+        <div class="flex items-center gap-3 bg-slate-800 px-4 py-2 rounded-full border border-slate-700">
+            <div class="text-sm">
+                <p id="display-username" class="font-bold text-white">Jugador</p>
+                <p class="text-casino-gold font-mono"><span id="display-balance">0</span> <i class="fas fa-coins text-xs"></i></p>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto bg-casino-dark p-4 sm:p-8">
+        
+        <!-- Tab: LOBBY (Historial) -->
+        <section id="lobby" class="tab-content active h-full max-w-4xl mx-auto flex flex-col">
+            <div class="mb-6 text-center">
+                <h2 class="text-3xl font-bold text-white mb-2">Actividad en Vivo</h2>
+                <p class="text-gray-400">Mira lo que están apostando tus amigos en tiempo real.</p>
+            </div>
+            <div class="bg-slate-800 rounded-xl border border-slate-700 flex-1 overflow-hidden flex flex-col shadow-xl">
+                <div class="bg-slate-900 p-3 border-b border-slate-700 grid grid-cols-4 font-semibold text-gray-400 text-sm">
+                    <div>Jugador</div>
+                    <div>Juego</div>
+                    <div>Apuesta</div>
+                    <div>Resultado</div>
+                </div>
+                <div id="history-feed" class="overflow-y-auto flex-1 p-2 space-y-2">
+                    <!-- Los items del historial se inyectan aquí -->
+                    <div class="text-center text-gray-500 mt-10">Cargando actividad...</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="higherlower" class="tab-content h-full">
+            <div class="max-w-md mx-auto bg-casino-green rounded-2xl border-4 border-slate-800 shadow-2xl p-6 text-center relative overflow-hidden">
+                <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent"></div>
+                
+                <h2 class="text-2xl font-bold text-white relative z-10 mb-6 drop-shadow-md">Mayor o Menor</h2>
+                
+                <div class="flex justify-center mb-8 relative z-10">
+                    <div id="hl-card" class="card text-4xl shadow-xl">?</div>
+                </div>
+
+                <div class="bg-black/40 p-4 rounded-xl relative z-10 mb-6">
+                    <p class="text-gray-300 text-sm mb-2">Apuesta (Monedas):</p>
+                    <input type="number" id="hl-bet" value="5" min="1" class="w-24 px-3 py-2 bg-slate-900 text-white rounded text-center text-xl font-mono focus:outline-none focus:ring-2 focus:ring-casino-gold">
+                </div>
+
+                <div class="flex gap-4 justify-center relative z-10">
+                    <button onclick="playHigherLower('lower')" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-lg shadow-[0_4px_0_#7f1d1d] active:shadow-[0_0px_0_#7f1d1d] active:translate-y-1 transition">
+                        <i class="fas fa-arrow-down mb-1 text-xl"></i><br>Menor
+                    </button>
+                    <button onclick="playHigherLower('higher')" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg shadow-[0_4px_0_#1e3a8a] active:shadow-[0_0px_0_#1e3a8a] active:translate-y-1 transition">
+                        <i class="fas fa-arrow-up mb-1 text-xl"></i><br>Mayor
+                    </button>
+                </div>
+                
+                <div id="hl-msg" class="mt-6 font-bold text-lg h-6 relative z-10"></div>
+            </div>
+        </section>
+
+        <section id="roulette" class="tab-content h-full">
+            <div class="max-w-3xl mx-auto bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl p-6 text-center">
+                <h2 class="text-2xl font-bold text-white mb-6">Ruleta Europea</h2>
+                
+                <div class="flex flex-col md:flex-row items-center justify-center gap-8 mb-8">
+                    <!-- Rueda (Visual simplificada) -->
+                    <div class="relative w-48 h-48 rounded-full border-8 border-slate-600 bg-casino-green shadow-[inset_0_0_20px_rgba(0,0,0,0.8)] flex items-center justify-center overflow-hidden">
+                        <div id="roulette-wheel" class="w-full h-full rounded-full border-4 border-dashed border-casino-gold/50 flex items-center justify-center transition-transform duration-1000">
+                            <div id="roulette-result-display" class="bg-black text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold shadow-lg border-2 border-casino-gold z-10">?</div>
+                        </div>
+                    </div>
+
+                    <!-- Panel de Apuestas -->
+                    <div class="bg-black/30 p-6 rounded-xl flex-1 w-full text-left">
+                        <p class="text-gray-300 text-sm mb-2">Tu Apuesta (Monedas):</p>
+                        <input type="number" id="rl-bet" value="5" min="1" class="w-full max-w-[150px] px-3 py-2 bg-slate-900 text-white rounded text-xl font-mono mb-6 focus:outline-none focus:ring-2 focus:ring-casino-gold">
+                        
+                        <p class="text-gray-300 text-sm mb-2">Selecciona a qué apostar (Paga 1 a 1):</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="playRoulette('red')" class="bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded transition">Rojo</button>
+                            <button onclick="playRoulette('black')" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded transition">Negro</button>
+                            <button onclick="playRoulette('even')" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded transition">Par</button>
+                            <button onclick="playRoulette('odd')" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded transition">Impar</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="rl-msg" class="font-bold text-lg h-6"></div>
+            </div>
+        </section>
+
+        <section id="blackjack" class="tab-content h-full">
+            <div class="max-w-4xl mx-auto bg-casino-green rounded-2xl border-8 border-slate-900 shadow-2xl p-6 relative overflow-hidden">
+                <div class="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] pointer-events-none"></div>
+                
+                <h2 class="text-2xl font-bold text-white text-center mb-6 drop-shadow-md">Blackjack (Paga 1 a 1)</h2>
+                
+                <!-- Mesa -->
+                <div class="flex flex-col gap-8 relative z-10">
+                    
+                    <!-- Crupier -->
+                    <div class="text-center">
+                        <p class="text-gray-300 font-bold mb-2">Mano del Crupier <span id="bj-dealer-score" class="bg-black/50 px-2 py-1 rounded text-sm ml-2">?</span></p>
+                        <div id="bj-dealer-cards" class="flex justify-center gap-2 min-h-[120px]">
+                            <!-- Cartas Crupier -->
+                        </div>
+                    </div>
+
+                    <!-- Mensaje Central -->
+                    <div class="text-center h-8">
+                        <span id="bj-msg" class="bg-black/70 px-4 py-2 rounded-full text-casino-gold font-bold shadow-lg hidden text-lg">¡Ganas!</span>
+                    </div>
+
+                    <!-- Jugador -->
+                    <div class="text-center">
+                        <p class="text-gray-300 font-bold mb-2">Tu Mano <span id="bj-player-score" class="bg-black/50 px-2 py-1 rounded text-sm ml-2">0</span></p>
+                        <div id="bj-player-cards" class="flex justify-center gap-2 min-h-[120px]">
+                            <!-- Cartas Jugador -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controles -->
+                <div class="mt-8 bg-black/40 p-4 rounded-xl relative z-10 flex flex-wrap justify-center items-center gap-6">
+                    <div id="bj-bet-container" class="flex items-center gap-3">
+                        <label class="text-gray-300 text-sm">Apuesta:</label>
+                        <input type="number" id="bj-bet" value="10" min="1" class="w-24 px-2 py-1 bg-slate-900 text-white rounded text-lg font-mono focus:outline-none focus:ring-1 focus:ring-casino-gold">
+                        <button onclick="startBlackjack()" id="bj-btn-deal" class="bg-casino-gold text-black font-bold py-2 px-6 rounded hover:bg-yellow-400 transition">Repartir</button>
+                    </div>
+                    
+                    <div id="bj-actions" class="hidden flex gap-3">
+                        <button onclick="hitBlackjack()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded transition shadow-lg">Pedir (Hit)</button>
+                        <button onclick="standBlackjack()" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded transition shadow-lg">Plantarse (Stand)</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal de Mensajes Globales -->
+    <div id="custom-alert" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div class="bg-slate-800 p-6 rounded-xl border border-slate-600 max-w-sm w-full text-center shadow-2xl transform scale-95 transition-transform" id="alert-box">
+            <h3 id="alert-title" class="text-xl font-bold text-white mb-2">Aviso</h3>
+            <p id="alert-msg" class="text-gray-300 mb-6">Mensaje</p>
+            <button onclick="closeAlert()" class="bg-casino-gold text-black font-bold py-2 px-6 rounded hover:bg-yellow-400">Aceptar</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // === CONFIGURACIÓN FIREBASE (Uso de Variables del Entorno) ===
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'casino-royale-local';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            // Fallback config dummy if run outside environment. Will fail without real config, but keeps code syntax valid.
+            projectId: "dummy-project"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Rutas Estrictas de Colecciones Públicas
+        const USERS_COLLECTION = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+        const HISTORY_COLLECTION = collection(db, 'artifacts', appId, 'public', 'data', 'history');
+
+        // Estado Global
+        window.gameState = {
+            userId: null,
+            username: '',
+            balance: 0,
+            initialCoins: 20
+        };
+
+        // UI Helpers
+        window.showAlert = (title, msg) => {
+            document.getElementById('alert-title').innerText = title;
+            document.getElementById('alert-msg').innerText = msg;
+            const alertEl = document.getElementById('custom-alert');
+            alertEl.classList.remove('hidden');
+            alertEl.classList.add('flex');
+            setTimeout(() => document.getElementById('alert-box').classList.replace('scale-95', 'scale-100'), 10);
+        };
+        window.closeAlert = () => {
+            const alertEl = document.getElementById('custom-alert');
+            alertEl.classList.remove('flex');
+            alertEl.classList.add('hidden');
+            document.getElementById('alert-box').classList.replace('scale-100', 'scale-95');
+        };
+
+        // Control de Pestañas
+        window.switchTab = (tabId) => {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(el => {
+                el.classList.remove('bg-slate-800', 'text-casino-gold', 'border', 'border-casino-gold', 'font-semibold');
+                el.classList.add('text-gray-400');
+            });
+            
+            document.getElementById(tabId).classList.add('active');
+            const btn = document.getElementById('tab-' + tabId);
+            btn.classList.remove('text-gray-400');
+            btn.classList.add('bg-slate-800', 'text-casino-gold', 'border', 'border-casino-gold', 'font-semibold');
+        };
+
+        // === AUTENTICACIÓN Y LOGIN ===
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Error Auth:", error);
+                showAlert("Error", "No se pudo conectar al servidor.");
+            }
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.gameState.userId = user.uid;
+                checkUserInDB(user.uid);
+            }
+        });
+
+        async function checkUserInDB(uid) {
+            try {
+                const userDocRef = doc(USERS_COLLECTION, uid);
+                const userSnap = await getDoc(userDocRef);
+                
+                if (userSnap.exists()) {
+                    // Usuario ya registrado
+                    const data = userSnap.data();
+                    window.gameState.username = data.username;
+                    window.gameState.balance = data.balance;
+                    completeLogin();
+                } else {
+                    // Nuevo usuario, mostrar modal
+                    document.getElementById('login-screen').classList.remove('hidden');
+                }
+            } catch (e) {
+                console.error("Error comprobando usuario:", e);
+            }
+        }
+
+        document.getElementById('login-btn').addEventListener('click', async () => {
+            const nameInput = document.getElementById('username-input').value.trim();
+            if (nameInput.length < 3) {
+                document.getElementById('login-error').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('login-btn').disabled = true;
+            document.getElementById('login-btn').innerText = "Creando cuenta...";
+
+            try {
+                const uid = window.gameState.userId;
+                const userDocRef = doc(USERS_COLLECTION, uid);
+                await setDoc(userDocRef, {
+                    username: nameInput,
+                    balance: window.gameState.initialCoins,
+                    joinedAt: serverTimestamp()
+                });
+                
+                window.gameState.username = nameInput;
+                window.gameState.balance = window.gameState.initialCoins;
+                completeLogin();
+            } catch (e) {
+                console.error("Error guardando usuario:", e);
+                showAlert("Error", "No se pudo crear la cuenta.");
+                document.getElementById('login-btn').disabled = false;
+                document.getElementById('login-btn').innerText = "Entrar al Casino";
+            }
+        });
+
+        function completeLogin() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('display-username').innerText = window.gameState.username;
+            updateBalanceUI(window.gameState.balance);
+            
+            // Iniciar Listeners
+            listenToBalance();
+            listenToHistory();
+        }
+
+        // === LISTENERS (Firebase Realtime) ===
+        function listenToBalance() {
+            const uid = window.gameState.userId;
+            if (!uid) return;
+            const userDocRef = doc(USERS_COLLECTION, uid);
+            onSnapshot(userDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    window.gameState.balance = docSnap.data().balance;
+                    updateBalanceUI(window.gameState.balance);
+                }
+            }, (error) => {
+                console.error("Error en balance listener:", error);
+            });
+        }
+
+        function updateBalanceUI(balance) {
+            document.getElementById('display-balance').innerText = balance;
+        }
+
+        function listenToHistory() {
+            // Importante: No usamos orderBy ni complex queries para evitar errores de índices.
+            onSnapshot(HISTORY_COLLECTION, (snapshot) => {
+                const history = [];
+                snapshot.forEach(doc => {
+                    history.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // Ordenar en memoria (más reciente primero)
+                history.sort((a, b) => {
+                    const timeA = a.timestamp ? a.timestamp.toMillis() : 0;
+                    const timeB = b.timestamp ? b.timestamp.toMillis() : 0;
+                    return timeB - timeA;
+                });
+
+                renderHistory(history);
+            }, (error) => {
+                console.error("Error history listener:", error);
+            });
+        }
+
+        function renderHistory(history) {
+            const container = document.getElementById('history-feed');
+            container.innerHTML = '';
+            
+            if (history.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-500 mt-10">Sin actividad reciente.</div>';
+                return;
+            }
+
+            // Mostrar solo los últimos 50 en UI
+            const recentHistory = history.slice(0, 50);
+
+            recentHistory.forEach(item => {
+                const isWin = item.result > 0;
+                const resultColor = isWin ? 'text-green-400' : (item.result < 0 ? 'text-red-400' : 'text-gray-400');
+                const resultText = isWin ? `+${item.result}` : (item.result < 0 ? `${item.result}` : 'Empate');
+                
+                const gameIcon = item.game === 'Blackjack' ? '<i class="fas fa-spade text-gray-400"></i> ' :
+                               item.game === 'Ruleta' ? '<i class="fas fa-life-ring text-red-400"></i> ' :
+                               '<i class="fas fa-sort-numeric-up text-blue-400"></i> ';
+
+                const div = document.createElement('div');
+                div.className = 'grid grid-cols-4 bg-slate-800/50 p-2 rounded items-center text-sm border-l-2 ' + (isWin ? 'border-green-500' : 'border-slate-600');
+                div.innerHTML = `
+                    <div class="font-bold truncate" title="${item.username}">${item.username}</div>
+                    <div class="truncate">${gameIcon} <span class="hidden sm:inline">${item.game}</span></div>
+                    <div class="font-mono">${item.bet} <i class="fas fa-coins text-xs text-casino-gold"></i></div>
+                    <div class="font-mono font-bold ${resultColor}">${resultText}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // === FUNCIONES COMUNES JUEGOS ===
+        
+        async function processGameResult(gameName, betAmount, netChange, details) {
+            // netChange: positivo si gana (profit), negativo si pierde (loss), 0 empate
+            const newBalance = window.gameState.balance + netChange;
+            if (newBalance < 0) {
+                showAlert("Error", "Algo salió mal, saldo negativo.");
+                return false;
+            }
+
+            try {
+                // Actualizar saldo
+                const userDocRef = doc(USERS_COLLECTION, window.gameState.userId);
+                await updateDoc(userDocRef, { balance: newBalance });
+
+                // Registrar en historial global
+                await addDoc(HISTORY_COLLECTION, {
+                    username: window.gameState.username,
+                    userId: window.gameState.userId,
+                    game: gameName,
+                    bet: betAmount,
+                    result: netChange, // Cuánto ganó (+) o perdió (-) neto
+                    details: details,
+                    timestamp: serverTimestamp()
+                });
+                
+                return true;
+            } catch (e) {
+                console.error("Error al guardar resultado:", e);
+                showAlert("Error", "Fallo de conexión al guardar resultado.");
+                return false;
+            }
+        }
+
+        function checkBet(betInputId) {
+            const betStr = document.getElementById(betInputId).value;
+            const bet = parseInt(betStr);
+            if (isNaN(bet) || bet <= 0) {
+                showAlert("Apuesta Inválida", "Ingresa una cantidad mayor a 0.");
+                return false;
+            }
+            if (bet > window.gameState.balance) {
+                showAlert("Saldo Insuficiente", "No tienes suficientes monedas para esa apuesta.");
+                return false;
+            }
+            return bet;
+        }
+
+        function displayMessage(elementId, text, type) {
+            const el = document.getElementById(elementId);
+            el.innerText = text;
+            el.className = `mt-6 font-bold text-lg h-6 relative z-10 transition-colors duration-300 ${
+                type === 'win' ? 'text-green-400' : (type === 'lose' ? 'text-red-400' : 'text-gray-300')
+            }`;
+            setTimeout(() => el.innerText = '', 3000);
+        }
+
+        // ==========================================
+        // ==========================================
+        let hlCurrentCard = Math.floor(Math.random() * 13) + 1; // 1 a 13
+        updateHLCardUI(hlCurrentCard);
+
+        function updateHLCardUI(val) {
+            const cardEl = document.getElementById('hl-card');
+            let displayVal = val;
+            if (val === 1) displayVal = 'A';
+            else if (val === 11) displayVal = 'J';
+            else if (val === 12) displayVal = 'Q';
+            else if (val === 13) displayVal = 'K';
+            
+            cardEl.innerText = displayVal;
+            // Estilo visual random
+            cardEl.className = `card text-4xl shadow-xl transition-transform duration-300 transform scale-110 ${Math.random() > 0.5 ? 'red' : ''}`;
+            setTimeout(() => cardEl.classList.remove('scale-110'), 300);
+        }
+
+        window.playHigherLower = async (guess) => {
+            if (!window.gameState.userId) return;
+            const bet = checkBet('hl-bet');
+            if (!bet) return;
+
+            const newCard = Math.floor(Math.random() * 13) + 1;
+            updateHLCardUI(newCard);
+
+            let won = false;
+            let tie = false;
+
+            if (newCard === hlCurrentCard) tie = true;
+            else if (guess === 'higher' && newCard > hlCurrentCard) won = true;
+            else if (guess === 'lower' && newCard < hlCurrentCard) won = true;
+
+            hlCurrentCard = newCard; // actualiza para la siguiente ronda
+
+            let netChange = 0;
+            if (tie) {
+                displayMessage('hl-msg', 'Empate (Misma carta). Recuperas tu apuesta.', 'tie');
+                netChange = 0;
+            } else if (won) {
+                displayMessage('hl-msg', `¡Ganaste +${bet} monedas!`, 'win');
+                netChange = bet;
+            } else {
+                displayMessage('hl-msg', `Perdiste -${bet} monedas.`, 'lose');
+                netChange = -bet;
+            }
+
+            await processGameResult('Mayor/Menor', bet, netChange, `Adivinó ${guess}. Carta: ${newCard}`);
+        };
+
+
+        // ==========================================
+        // ==========================================
+        let rouletteSpinning = false;
+        
+        window.playRoulette = async (betType) => {
+            if (rouletteSpinning || !window.gameState.userId) return;
+            const bet = checkBet('rl-bet');
+            if (!bet) return;
+
+            rouletteSpinning = true;
+            
+            // Animar rueda
+            const wheel = document.getElementById('roulette-wheel');
+            const display = document.getElementById('roulette-result-display');
+            display.innerText = '?';
+            display.className = 'bg-black text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold shadow-lg border-2 border-casino-gold z-10 spin-anim';
+            
+            // Resultado de ruleta europea: 0 a 36
+            const resultNum = Math.floor(Math.random() * 37);
+            
+            // Lógica colores (Simplificada)
+            const redNumbers = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+            let isRed = redNumbers.includes(resultNum);
+            let isBlack = resultNum !== 0 && !isRed;
+            let isEven = resultNum !== 0 && resultNum % 2 === 0;
+            let isOdd = resultNum !== 0 && resultNum % 2 !== 0;
+
+            setTimeout(async () => {
+                display.classList.remove('spin-anim');
+                display.innerText = resultNum;
+                
+                if (resultNum === 0) display.className = 'bg-green-600 text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold z-10 shadow-[0_0_15px_#16a34a]';
+                else if (isRed) display.className = 'bg-red-600 text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold z-10 shadow-[0_0_15px_#dc2626]';
+                else display.className = 'bg-black text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold z-10 shadow-[0_0_15px_#000]';
+
+                let won = false;
+                if (resultNum !== 0) {
+                    if (betType === 'red' && isRed) won = true;
+                    if (betType === 'black' && isBlack) won = true;
+                    if (betType === 'even' && isEven) won = true;
+                    if (betType === 'odd' && isOdd) won = true;
+                }
+
+                let netChange = won ? bet : -bet; // Paga 1 a 1
+
+                if (won) displayMessage('rl-msg', `¡Salió ${resultNum}! Ganaste +${bet} monedas.`, 'win');
+                else displayMessage('rl-msg', `Salió ${resultNum}. Perdiste.`, 'lose');
+
+                await processGameResult('Ruleta', bet, netChange, `Apostó ${betType}. Salió ${resultNum}`);
+                rouletteSpinning = false;
+            }, 2000);
+        };
+
+
+        // ==========================================
+        // ==========================================
+        let bjDeck = [];
+        let bjPlayerHand = [];
+        let bjDealerHand = [];
+        let bjCurrentBet = 0;
+        let bjState = 'idle'; // idle, playing
+
+        const createDeck = () => {
+            const suits = ['♠', '♥', '♦', '♣'];
+            const values = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+            let deck = [];
+            for (let suit of suits) {
+                for (let value of values) {
+                    deck.push({ suit, value, weight: (value === 'A' ? 11 : (['J','Q','K'].includes(value) ? 10 : parseInt(value))) });
+                }
+            }
+            return deck.sort(() => Math.random() - 0.5); // Barajar simple
+        };
+
+        const calculateScore = (hand) => {
+            let score = 0;
+            let aces = 0;
+            for (let card of hand) {
+                score += card.weight;
+                if (card.value === 'A') aces += 1;
+            }
+            while (score > 21 && aces > 0) {
+                score -= 10;
+                aces -= 1;
+            }
+            return score;
+        };
+
+        const renderCard = (card, hidden = false) => {
+            if (hidden) return `<div class="card hidden shadow-md w-16 h-24 sm:w-20 sm:h-28 text-lg sm:text-2xl">?</div>`;
+            const isRed = card.suit === '♥' || card.suit === '♦';
+            return `<div class="card shadow-md w-16 h-24 sm:w-20 sm:h-28 text-lg sm:text-2xl flex-col ${isRed ? 'red' : ''}">
+                        <div class="text-sm self-start pl-1">${card.value}</div>
+                        <div class="text-2xl">${card.suit}</div>
+                    </div>`;
+        };
+
+        const updateBJUI = (hideDealerCard = true) => {
+            document.getElementById('bj-player-cards').innerHTML = bjPlayerHand.map(c => renderCard(c)).join('');
+            document.getElementById('bj-player-score').innerText = calculateScore(bjPlayerHand);
+            
+            if (hideDealerCard && bjDealerHand.length > 0) {
+                document.getElementById('bj-dealer-cards').innerHTML = renderCard(bjDealerHand[0]) + renderCard(null, true);
+                document.getElementById('bj-dealer-score').innerText = "?";
+            } else {
+                document.getElementById('bj-dealer-cards').innerHTML = bjDealerHand.map(c => renderCard(c)).join('');
+                document.getElementById('bj-dealer-score').innerText = calculateScore(bjDealerHand);
+            }
+        };
+
+        window.startBlackjack = () => {
+            if (bjState === 'playing' || !window.gameState.userId) return;
+            
+            const bet = checkBet('bj-bet');
+            if (!bet) return;
+            bjCurrentBet = bet;
+
+            document.getElementById('bj-msg').classList.add('hidden');
+            document.getElementById('bj-bet-container').classList.add('hidden');
+            document.getElementById('bj-actions').classList.remove('hidden');
+
+            bjDeck = createDeck();
+            bjPlayerHand = [bjDeck.pop(), bjDeck.pop()];
+            bjDealerHand = [bjDeck.pop(), bjDeck.pop()];
+            bjState = 'playing';
+
+            updateBJUI(true);
+
+            if (calculateScore(bjPlayerHand) === 21) {
+                endBlackjack(); // Blackjack natural
+            }
+        };
+
+        window.hitBlackjack = () => {
+            if (bjState !== 'playing') return;
+            bjPlayerHand.push(bjDeck.pop());
+            updateBJUI(true);
+            
+            if (calculateScore(bjPlayerHand) > 21) {
+                endBlackjack(); // Se pasó (Bust)
+            }
+        };
+
+        window.standBlackjack = () => {
+            if (bjState !== 'playing') return;
+            endBlackjack();
+        };
+
+        const endBlackjack = async () => {
+            bjState = 'idle';
+            document.getElementById('bj-actions').classList.add('hidden');
+            document.getElementById('bj-bet-container').classList.remove('hidden');
+            
+            let pScore = calculateScore(bjPlayerHand);
+            let dScore = calculateScore(bjDealerHand);
+
+            // Turno del dealer
+            if (pScore <= 21) {
+                while (dScore < 17) {
+                    bjDealerHand.push(bjDeck.pop());
+                    dScore = calculateScore(bjDealerHand);
+                }
+            }
+
+            updateBJUI(false); // Mostrar cartas del dealer
+
+            let resultMsg = "";
+            let netChange = 0;
+            let msgClass = "";
+
+            if (pScore > 21) {
+                resultMsg = "¡Te pasaste! Perdiste.";
+                netChange = -bjCurrentBet;
+                msgClass = "text-red-400";
+            } else if (dScore > 21) {
+                resultMsg = "El crupier se pasó. ¡Ganaste!";
+                netChange = bjCurrentBet;
+                msgClass = "text-green-400";
+            } else if (pScore > dScore) {
+                resultMsg = "¡Ganaste!";
+                netChange = bjCurrentBet;
+                msgClass = "text-green-400";
+            } else if (dScore > pScore) {
+                resultMsg = "El crupier gana.";
+                netChange = -bjCurrentBet;
+                msgClass = "text-red-400";
+            } else {
+                resultMsg = "Empate.";
+                netChange = 0;
+                msgClass = "text-gray-300";
+            }
+
+            const msgEl = document.getElementById('bj-msg');
+            msgEl.innerText = resultMsg;
+            msgEl.className = `bg-black/80 px-6 py-2 rounded-full font-bold shadow-lg text-lg inline-block ${msgClass}`;
+            msgEl.classList.remove('hidden');
+
+            await processGameResult('Blackjack', bjCurrentBet, netChange, `Jugador: ${pScore}, Crupier: ${dScore}`);
+        };
+
+        // Arrancar
+        initAuth();
+
+    </script>
+</body>
+</html>
