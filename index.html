@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>The Pedro &amp; Paco Casino</title>
-  <link rel="stylesheet" href="css/style.css?v=36.16">
+  <link rel="stylesheet" href="css/style.css?v=37.4">
 </head>
 <body>
   <main id="login" class="panel">
@@ -590,6 +590,12 @@
         </div>
       </div>
 
+      <div class="mp-game-selector" role="tablist" aria-label="Juegos multijugador">
+        <button type="button" class="mp-game-tab on" data-mp-game="connect4" role="tab" aria-selected="true">4 EN RAYA</button>
+        <button type="button" class="mp-game-tab" data-mp-game="chess" role="tab" aria-selected="false">AJEDREZ <span>BETA</span></button>
+        <button type="button" class="mp-game-tab" data-mp-game="race" role="tab" aria-selected="false">CARRERAS</button>
+      </div>
+
       <div id="c4-lobby-view" class="c4-view">
         <div class="c4-lobby-grid">
           <div class="c4-create-panel">
@@ -657,8 +663,143 @@
           <div><span class="c4-result-kicker">PARTIDA TERMINADA</span><h3 id="c4-result-title">¡VICTORIA!</h3><p id="c4-result-copy"></p></div>
         </div>
       </div>
+
+
+    <section id="chess-lobby-view" class="chess-view hidden">
+      <div class="chess-lobby-grid">
+        <div class="chess-create-panel">
+          <div class="chess-panel-kicker">AJEDREZ · 5 + 0</div>
+          <h3>Crea una partida</h3>
+          <p>Elige la apuesta con las fichas de abajo. Los dos jugadores tendrán 5 minutos y las blancas empezarán.</p>
+          <div class="chess-create-stake"><span>APUESTA SELECCIONADA</span><strong id="chess-selected-stake">0 FP</strong></div>
+          <button id="chess-create" type="button" class="main chess-primary">CREAR SALA <span>♜</span></button>
+          <button id="chess-refresh" type="button" class="chess-refresh-button">↻ Actualizar salas</button>
+        </div>
+
+        <div class="chess-rooms-panel">
+          <div class="chess-section-head"><div><span>SALAS ABIERTAS</span><h3>Encuentra rival</h3></div><span class="chess-live-pill">● EN DIRECTO</span></div>
+          <div id="chess-feedback" class="chess-feedback" aria-live="polite"></div>
+          <div id="chess-rooms" class="chess-rooms"><div class="chess-lobby-empty"><div class="chess-empty-orb">♞</div><h3>Cargando salas…</h3></div></div>
+        </div>
+      </div>
     </section>
 
+    <section id="chess-match-view" class="chess-view hidden">
+      <div class="chess-match-shell">
+        <div class="chess-match-head">
+          <div><span>AJEDREZ · 5 + 0</span><h3>Partida en directo</h3></div>
+          <div class="chess-match-stats"><div><span>APUESTA</span><b id="chess-stake">0 FP</b></div><div><span>BOTE</span><b id="chess-pot">0 FP</b></div><div><span>TU COLOR</span><b id="chess-my-color">—</b></div></div>
+        </div>
+
+        <div class="chess-players-row">
+          <div id="chess-black-player"></div>
+          <div class="chess-vs-mark"><span>VS</span><small id="chess-status-label">ESPERANDO RIVAL</small></div>
+          <div id="chess-white-player"></div>
+        </div>
+
+        <div class="chess-board-stage">
+          <div class="chess-board-glow"></div>
+          <div class="chess-clock-row">
+            <div id="chess-black-clock" class="chess-clock"><span>NEGRAS</span><strong>5:00</strong></div>
+            <div id="chess-turn-pulse" class="chess-turn-pulse">PREPARANDO</div>
+            <div id="chess-white-clock" class="chess-clock"><span>BLANCAS</span><strong>5:00</strong></div>
+          </div>
+          <div class="chess-files" aria-hidden="true"><span>a</span><span>b</span><span>c</span><span>d</span><span>e</span><span>f</span><span>g</span><span>h</span></div>
+          <div id="chess-board" class="chess-board" role="grid" aria-label="Tablero de ajedrez"></div>
+          <div class="chess-ranks" aria-hidden="true"><span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span></div>
+        </div>
+
+        <div id="chess-promotion" class="chess-promotion hidden" aria-label="Elegir promoción">
+          <span>PROMOCIONA TU PEÓN</span>
+          <button type="button" data-promotion="q">♛</button>
+          <button type="button" data-promotion="r">♜</button>
+          <button type="button" data-promotion="b">♝</button>
+          <button type="button" data-promotion="n">♞</button>
+        </div>
+
+        <div class="chess-match-actions">
+          <button id="chess-resign" type="button" class="chess-danger" disabled>RENDIRSE</button>
+          <button id="chess-back-lobby" type="button" class="chess-secondary">SALIR DE LA SALA</button>
+        </div>
+      </div>
+
+      <div id="chess-color-overlay" class="chess-overlay hidden" aria-live="polite">
+        <div class="chess-color-card">
+          <span class="chess-color-kicker">SORTEO DE COLOR</span>
+          <div id="chess-color-coin" class="chess-color-coin"><span class="front">BLANCAS</span><span class="back">NEGRAS</span></div>
+          <strong id="chess-color-result">Decidiendo quién juega con blancas…</strong>
+        </div>
+      </div>
+
+      <div id="chess-result" class="chess-result hidden">
+        <div id="chess-result-icon" class="chess-result-icon">✓</div>
+        <div><span>PARTIDA TERMINADA</span><h3 id="chess-result-title">VICTORIA</h3><p id="chess-result-copy"></p></div>
+      </div>
+    </section>
+
+
+    <section id="race-lobby-view" class="race-view hidden">
+      <div class="race-lobby-grid">
+        <div class="race-create-panel">
+          <div class="race-panel-kicker">CARRERAS · 7 COCHES</div>
+          <h3>Crea una sala</h3>
+          <p>Invita a tus rivales y, cuando estén todos dentro, abre la fase de apuestas. Cada jugador podrá elegir cualquiera de los siete coches y apostar la cantidad que quiera con sus FP.</p>
+          <div class="race-reward-strip"><div><b>1º</b><span>x5</span></div><div><b>2º</b><span>x3</span></div><div><b>3º</b><span>x1 · DEVOLUCIÓN</span></div></div>
+          <button id="race-create" type="button" class="main race-primary">CREAR SALA <span>🏁</span></button>
+          <button id="race-refresh" type="button" class="race-refresh-button">↻ Actualizar salas</button>
+        </div>
+        <div class="race-rooms-panel">
+          <div class="race-section-head"><div><span>SALAS ABIERTAS</span><h3>Encuentra rivales</h3></div><span class="race-live-pill">● EN DIRECTO</span></div>
+          <div id="race-feedback" class="race-feedback" aria-live="polite"></div>
+          <div id="race-rooms" class="race-rooms"><div class="race-lobby-empty"><div class="race-empty-icon">🏎</div><h3>Cargando salas…</h3></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="race-match-view" class="race-view hidden">
+      <div class="race-match-shell">
+        <div class="race-match-head">
+          <div><span>CARRERAS · 7 COCHES</span><h3>Autódromo Pedro &amp; Paco</h3></div>
+          <div class="race-match-stats"><div><span>FASE</span><b id="race-status-label">ESPERANDO JUGADORES</b></div><div><span>JUGADORES</span><b id="race-player-count">0</b></div><div><span>LISTOS</span><b id="race-ready-count">0</b></div></div>
+        </div>
+
+        <div id="race-waiting-panel" class="race-phase-card">
+          <div class="race-phase-head"><div><span>SALA DE ESPERA</span><h3 id="race-waiting-count">1 jugador dentro</h3></div><span class="race-phase-badge">ESPERANDO</span></div>
+          <div id="race-waiting-players" class="race-waiting-players"></div>
+          <p id="race-waiting-hint" class="race-phase-hint">Comparte la sala y espera a que entre otro jugador.</p>
+          <button id="race-start-betting" type="button" class="main race-primary hidden">COMENZAR APUESTAS <span>→</span></button>
+        </div>
+
+        <div id="race-betting-panel" class="race-phase-card hidden">
+          <div class="race-phase-head"><div><span>FASE DE APUESTAS</span><h3>Elige tu coche</h3></div><span id="race-bet-count" class="race-phase-badge">0 / 0 APUESTAS LISTAS</span></div>
+          <div class="race-bet-toolbar"><div><span>COCHE</span><strong id="race-selected-car">ELIGE UN COCHE</strong></div><div><span>APUESTA</span><strong id="race-bet-amount">0 FP</strong></div></div>
+          <div id="race-cars" class="race-cars-grid">
+            <button type="button" class="race-car-card" data-car="0"><span class="race-card-number">01</span><span class="race-card-car">VORTEX</span><span class="race-card-visual">🏎️</span><span class="race-card-select">APOSTAR AQUÍ</span></button>
+            <button type="button" class="race-car-card" data-car="1"><span class="race-card-number">02</span><span class="race-card-car">NITRO</span><span class="race-card-visual">🚘</span><span class="race-card-select">APOSTAR AQUÍ</span></button>
+            <button type="button" class="race-car-card" data-car="2"><span class="race-card-number">03</span><span class="race-card-car">BLAZE</span><span class="race-card-visual">🏁</span><span class="race-card-select">APOSTAR AQUÍ</span></button>
+            <button type="button" class="race-car-card" data-car="3"><span class="race-card-number">04</span><span class="race-card-car">PHANTOM</span><span class="race-card-visual">🚗</span><span class="race-card-select">APOSTAR AQUÍ</span></button>
+            <button type="button" class="race-car-card" data-car="4"><span class="race-card-number">05</span><span class="race-card-car">COMET</span><span class="race-card-visual">🚙</span><span class="race-card-select">APOSTAR AQUÍ</span></button>
+            <button type="button" class="race-car-card" data-car="5"><span class="race-card-number">06</span><span class="race-card-car">ROCKET</span><span class="race-card-visual">🏎️</span><span class="race-card-select">APOSTAR AQUÍ</span></button>
+            <button type="button" class="race-car-card" data-car="6"><span class="race-card-number">07</span><span class="race-card-car">TURBO</span><span class="race-card-visual">🏁</span><span class="race-card-select">APOSTAR AQUÍ</span></button>
+          </div>
+          <div class="race-betting-footer"><div><span>La apuesta no tiene un límite de juego.</span><b>Solo necesitas saldo suficiente.</b></div><button id="race-place-bet" type="button" class="main race-primary">CONFIRMAR APUESTA</button></div>
+          <div id="race-participants" class="race-participants"></div>
+        </div>
+
+        <div id="race-track-panel" class="race-track-panel hidden">
+          <div class="race-track-head"><div><span>CARRERA EN DIRECTO</span><h3>¡A fondo!</h3></div><strong id="race-leader">LÍDER: VORTEX</strong></div>
+          <div id="race-track" class="race-track"></div>
+          <div id="race-countdown" class="race-countdown hidden"><strong>3</strong><span>PREPÁRATE</span></div>
+          <div class="race-track-footer"><span>7 pilotos · carrera sincronizada</span><span>🏁 META</span></div>
+        </div>
+
+        <div id="race-result" class="race-result hidden"><div class="race-result-head"><span>PODIO FINAL</span><h3 id="race-result-title">CARRERA TERMINADA</h3><p id="race-result-copy"></p></div><div id="race-podium" class="race-podium"></div></div>
+
+        <div class="race-match-actions"><button id="race-back-lobby" type="button" class="race-secondary">SALIR DE LA SALA</button></div>
+      </div>
+    </section>
+
+    </section>
 
     <div id="profile-modal" class="profile-modal hidden" aria-hidden="true">
       <div id="profile-modal-backdrop" class="profile-modal-backdrop"></div>
@@ -668,7 +809,7 @@
       </section>
     </div>
 
-    <div id="dock" data-casino-build="v36.18">
+    <div id="dock" data-casino-build="v37.3">
       <div id="chips"></div>
       <div id="dockv"></div>
       <button id="dclr" title="Reiniciar apuesta">↺</button>
@@ -681,14 +822,16 @@
   <script src="js/fortune.js?v=36.6"></script>
   <script src="js/dino.js?v=36.6"></script>
   <script src="js/shop.js?v=36.6"></script>
-  <script src="js/connect4-v36.15.js?v=36.18"></script>
-  <script src="js/app-v36.6.js?v=36.18"></script>
+  <script src="js/connect4-v36.25.js?v=36.25"></script>
+  <script src="js/chess-v36.27.js?v=36.27"></script>
+  <script src="js/race-v37.3.js?v=37.3"></script>
+  <script src="js/app-v37.js?v=37.0"></script>
   <script src="js/profile.js?v=36.6"></script>
   <script src="js/sidebar.js?v=36.6"></script>
   <script src="js/chat.js?v=36.6"></script>
   <script src="js/games-v36.10.js?v=36.12"></script>
   <script src="js/slots.js?v=36.6"></script>
   <script src="js/mines.js?v=36.6"></script>
-  <footer class="site-version" aria-label="Versión del sitio"><span>v36.18</span><i>•</i><span>STABLE</span></footer>
+  <footer class="site-version" aria-label="Versión del sitio"><span>v37.1</span><i>•</i><span>STABLE</span></footer>
 </body>
 </html>

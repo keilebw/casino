@@ -1,5 +1,5 @@
 /* ============================================================
-   CONNECT 4 — MULTIJUGADOR V36.15
+   CONNECT 4 — MULTIJUGADOR V36.25
    Cliente ligero: el servidor decide estado, turno y resultado.
    ============================================================ */
 (() => {
@@ -155,7 +155,7 @@
     root.innerHTML = board.map((value, idx) => `
       <button type="button" class="c4-cell ${value === 1 ? 'red' : value === 2 ? 'blue' : ''} ${just.includes(idx) ? 'drop-in' : ''}"
         data-c4-col="${idx % 7}" aria-label="Columna ${idx % 7 + 1}" ${value ? 'disabled' : ''}>
-        <span class="c4-slot"><i></i></span>
+        <span class="c4-token" aria-hidden="true"></span>
       </button>`).join('');
     lastBoardKey = key;
   }

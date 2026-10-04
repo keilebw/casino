@@ -1,5 +1,5 @@
 // ============================================================
-// APP PRINCIPAL
+// APP PRINCIPAL — V37
 // Supabase se encarga de las cuentas y de guardar los datos online.
 // ============================================================
 
@@ -199,8 +199,9 @@ const Casino = {
     const multiplayerTab = activeTab === 'multiplayer';
     const connect4Playing = multiplayerTab && typeof window.connect4IsPlaying === 'function' && window.connect4IsPlaying();
     const chessPlaying = multiplayerTab && typeof window.chessIsPlaying === 'function' && window.chessIsPlaying();
+    const racePlaying = multiplayerTab && typeof window.raceIsPlaying === 'function' && window.raceIsPlaying();
     const dock = $('#dock');
-    if (dock) dock.classList.toggle('slot-hidden', slots || fortune || roadActive || minesActive || dinosaurActive || connect4Playing || chessPlaying);
+    if (dock) dock.classList.toggle('slot-hidden', slots || fortune || roadActive || minesActive || dinosaurActive || connect4Playing || chessPlaying || racePlaying);
 
     document.querySelectorAll('.chip').forEach(chip => {
       chip.classList.toggle('on', roulette && Number(chip.dataset.v) === this.chip);
@@ -211,6 +212,7 @@ const Casino = {
     const minesTab = activeTab === 'mines';
     const rideBusTab = activeTab === 'ridebus';
     const chessTab = activeTab === 'multiplayer' && (window.multiplayerGame || 'connect4') === 'chess';
+    const raceTab = activeTab === 'multiplayer' && (window.multiplayerGame || 'connect4') === 'race';
     const roadTab = activeTab === 'road';
 
     // Los límites de stake son específicos de cada juego.
@@ -225,6 +227,8 @@ const Casino = {
   if (c4SelectedStake) c4SelectedStake.textContent = `${this.stake} FP`;
   const chessSelectedStake = $('#chess-selected-stake');
   if (chessSelectedStake) chessSelectedStake.textContent = `${this.stake} FP`;
+  const raceSelectedStake = $('#race-bet-amount');
+  if (raceSelectedStake) raceSelectedStake.textContent = `${this.stake} FP`;
 
   $('#dockv').innerHTML = roulette
       ? `Ficha: <b>${this.chip}</b> FP<br>En mesa: <b>${table}</b> FP`
@@ -234,6 +238,8 @@ const Casino = {
             ? `Apuesta: <b>${this.stake}</b> FP<br>Máximo: <b>1000 FP</b>`
             : chessTab
               ? `Apuesta: <b>${this.stake}</b> FP<br>Máximo: <b>5000 FP</b>`
+              : raceTab
+                ? `Apuesta: <b>${this.stake}</b> FP<br>Sin límite de juego`
             : `Apuesta: <b>${this.stake}</b> FP<br>Elige una ficha`;
 
   }
@@ -416,11 +422,13 @@ for (const [value, chipColor] of CHIPS) {
   button.onclick = () => {
     if (typeof window.connect4IsPlaying === 'function' && window.connect4IsPlaying()) return;
     if (typeof window.chessIsPlaying === 'function' && window.chessIsPlaying()) return;
+    if (typeof window.raceIsPlaying === 'function' && window.raceIsPlaying()) return;
     const activeTab = currentCasinoTab();
     const roulette = activeTab === 'roulette';
     const minesTab = activeTab === 'mines';
     const rideBusTab = activeTab === 'ridebus';
     const multiplayerTab = activeTab === 'multiplayer';
+    const raceTab = multiplayerTab && (window.multiplayerGame || 'connect4') === 'race';
     const roadTab = activeTab === 'road';
     const minesActive = activeTab === 'mines' && typeof window.isMinesActive === 'function' && window.isMinesActive();
 
@@ -429,11 +437,11 @@ for (const [value, chipColor] of CHIPS) {
     } else {
       if (minesActive) return;
       const maxStake = minesTab ? 250 : rideBusTab ? 1000 : roadTab ? 500 : Number.MAX_SAFE_INTEGER;
-      // Blackjack: sin límite específico. Las fichas altas seleccionan directamente
-      // la apuesta y NO se recortan al saldo en el selector. El RPC del servidor
-      // rechaza únicamente una apuesta que supere el saldo real disponible.
-      // Ride the Bus: máximo 1000 FP.
-      if (value >= 1000) {
+      // Carreras no tienen un tope propio: las fichas se acumulan y solo se
+      // limita al saldo real disponible, permitiendo apostar cantidades altas.
+      if (raceTab) {
+        Casino.stake = Math.min(Casino.stake + value, Casino.coins());
+      } else if (value >= 1000) {
         Casino.stake = Math.min(value, maxStake);
       } else {
         Casino.stake = Math.min(Casino.stake + value, maxStake);
@@ -487,6 +495,7 @@ $('#nav').onclick = event => {
   if (tab === 'multiplayer') {
     if (window.refreshConnect4) window.refreshConnect4();
     if (window.refreshChess) window.refreshChess();
+    if (window.refreshRace) window.refreshRace();
   }
   if (tab === 'mines' && window.refreshMines) window.refreshMines();
   if (tab === 'dinosaur' && window.refreshDinosaurStatus) window.refreshDinosaurStatus();
