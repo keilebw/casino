@@ -1,0 +1,3 @@
+-- V36.3
+-- El backend ya está configurado para: Blackjack sin máximo propio y Higher/Lower máximo 1000 FP.
+-- Este archivo documenta la política y no modifica perfiles ni saldos.

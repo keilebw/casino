@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>The Pedro &amp; Paco Casino</title>
+  <link rel="stylesheet" href="css/style.css?v=36.1">
+</head>
+<body>
+  <main id="login" class="panel">
+    <span class="brand-kicker">ESTABLISHED 2026 · ONLINE CASINO</span>
+    <h1>The Pedro &amp; Paco Casino</h1>
+    <p>Fodo Points virtuales, cero riesgo. Cada cuenta empieza con 20 FP.</p>
+
+    <input id="user" placeholder="Usuario" autocomplete="username" maxlength="8">
+    <input id="pass" type="password" placeholder="Contraseña" autocomplete="current-password" minlength="6">
+
+    <div class="row">
+      <button id="enter">Entrar</button>
+      <button id="create">Crear cuenta</button>
+    </div>
+    <p id="msg" role="alert"></p>
+  </main>
+
+  <div id="app" class="hidden">
+    <header class="site-header">
+      <div class="site-branding">
+        <span class="brand-kicker">THE PEDRO &amp; PACO CLUB</span>
+        <h1>The Pedro &amp; Paco Casino</h1>
+        <span class="brand-subtitle">GANA FODO POINTS - 100% CRÉDITOS VIRTUALES</span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-by">by keilebw</span>
+      </div>
+      <nav id="nav">
+        <button data-t="roulette" class="on">Ruleta</button>
+        <button data-t="blackjack">Blackjack</button>
+        <button data-t="hilo">Higher / Lower</button>
+        <button data-t="slots">Tragaperras</button>
+        <button data-t="fortune">Fortuna</button>
+        <button data-t="road">Road Rush</button>
+        <button data-t="mines">Minas</button>
+        <button data-t="dinosaur">Dinosaurio</button>
+        <button data-t="shop">Fodo Shop</button>
+        <button data-t="multiplayer">Multijugador</button>
+      </nav>
+      <div id="me">
+        <button id="profile-trigger" class="profile-mini" type="button" title="Abrir mi perfil">
+          <span id="profile-avatar-wrap" class="avatar-level-wrap header-avatar-level-wrap">
+            <img id="profile-avatar" class="ui-avatar profile-mini-avatar" src="assets/avatars/avatar_01.svg" alt="Tu avatar" draggable="false">
+            <span id="profile-level-badge" class="avatar-level-badge">1</span>
+          </span>
+          <span class="profile-mini-copy">
+            <span id="who">Jugador</span>
+            <span id="profile-title-mini"></span>
+            <span id="profile-level-mini">NIVEL 1</span>
+          </span>
+        </button>
+        <b id="coins" title="Créditos ficticios">0</b> <span class="currency">FP</span>
+        <button id="out">Salir</button>
+      </div>
+    </header>
+
+    <aside id="side-ranking" class="side-panel side-left" aria-label="Ranking de jugadores">
+      <div class="side-heading">
+        <span class="side-kicker">TABLA DE HONOR</span>
+        <h2>🏆 Ranking</h2>
+        <span id="online-count" class="online-pill">0 online</span>
+      </div>
+      <div id="ranking-list" class="ranking-list">
+        <div class="side-empty">Cargando ranking…</div>
+      </div>
+      <div class="side-foot">Top 5 por saldo</div>
+    </aside>
+
+    <aside id="side-chat" class="side-panel side-left side-chat-panel" aria-label="Chat en tiempo real">
+      <div class="side-chat-heading">
+        <span class="side-kicker">EN DIRECTO</span>
+        <h3>Chat en vivo</h3>
+      </div>
+      <div id="chat-messages" class="chat-box side-chat-box"></div>
+      <form id="chat-form" class="chat-form side-chat-form">
+        <input id="chat-input" maxlength="300" autocomplete="off" placeholder="Escribe un mensaje…">
+        <button type="submit" class="main">Enviar</button>
+      </form>
+      <div class="side-foot"><span class="live-dot"></span> Mensajes en tiempo real</div>
+    </aside>
+
+    <aside id="side-activity" class="side-panel side-right" aria-label="Actividad de jugadores online">
+      <div class="side-heading">
+        <span class="side-kicker">EN DIRECTO</span>
+        <h2>🎯 Apuestas online</h2>
+        <p>Movimientos recientes de jugadores conectados.</p>
+      </div>
+      <div id="online-bets" class="online-bets">
+        <div class="side-empty">Cargando actividad…</div>
+      </div>
+      <div class="side-foot"><span class="live-dot"></span> Se actualiza automáticamente</div>
+    </aside>
+
+    <section id="t-roulette" class="tab panel">
+      <h2>Ruleta europea</h2>
+      <p class="hint">Las fichas se colocan en la mesa y se descuentan al pulsar «Girar».</p>
+      <div class="rl">
+        <canvas id="wheel" width="320" height="320"></canvas>
+        <div class="side">
+          <div id="rres">–</div>
+          <div id="rhist"></div>
+          <p id="rsel">Elige una ficha abajo y toca la mesa</p>
+          <div class="row"><button id="spin" class="main">Girar</button><button id="rclr">Quitar fichas</button><button id="rrepeat" disabled>↻ Repetir apuesta</button></div>
+        </div>
+      </div>
+      <div class="scroll"><div id="table"></div></div>
+    </section>
+
+    <section id="t-blackjack" class="tab panel hidden">
+      <div class="game-hero bj-hero">
+        <div>
+          <span class="game-kicker">♠ CASINO CLASSIC ♠</span>
+          <h2>Blackjack</h2>
+          <p class="hint">El crupier se planta en 17. Pide carta o planta tu mano.</p>
+        </div>
+        <div class="game-rule-badge"><b>21</b><span>OBJETIVO</span></div>
+      </div>
+
+      <div class="bj-table">
+        <div class="bj-felt-glow"></div>
+        <div class="bj-deck-stack" id="bj-deck-stack" aria-hidden="true">
+          <div class="deck-card deck-card-3"></div>
+          <div class="deck-card deck-card-2"></div>
+          <div class="deck-card deck-card-1"></div>
+          <span class="deck-label">DECK</span>
+        </div>
+
+        <div class="bj-zone dealer-zone">
+          <div class="bj-zone-title"><span>CRUPIER</span><b id="bj-d" class="tot">–</b></div>
+          <div id="bj-dealer" class="hand bj-hand"></div>
+        </div>
+
+        <div class="bj-table-divider"><span>BLACKJACK PAYS 3:2</span><i></i></div>
+
+        <div class="bj-zone player-zone">
+          <div class="bj-zone-title"><span>TÚ</span><b id="bj-p" class="tot">–</b></div>
+          <div id="bj-player" class="hand bj-hand"></div>
+        </div>
+
+        <div id="bj-status" class="bj-status">Elige tu apuesta y pulsa <b>Repartir</b>.</div>
+      </div>
+
+      <div class="bj-bet-banner" aria-live="polite">
+        <span>APUESTA ACTUAL</span>
+        <strong id="bj-bet-amount">0 FP</strong>
+        <small>Selecciona las fichas de abajo</small>
+      </div>
+
+      <div class="bj-controls row">
+        <button id="bj-deal" class="main">♣ Repartir</button>
+        <button id="bj-hit">✦ Pedir</button>
+        <button id="bj-stand">✓ Plantarse</button>
+        <button id="bj-double">2× Doblar</button>
+        <button id="bj-split">✂ Dividir</button>
+      </div>
+      <p class="hint bj-tip">Sin límite de apuesta propio: puedes apostar hasta el total de tus FP disponibles. Los resultados y el saldo siguen resolviéndose en Supabase.</p>
+    </section>
+
+    <section id="t-slots" class="tab panel hidden">
+      <div class="slot-header">
+        <div>
+          <span class="slot-kicker">★ CASINO CLASSIC ★</span>
+          <h2>Tragaperras</h2>
+          <p class="hint">3 líneas de frutas · Apuesta total entre 1 y 100 FP</p>
+        </div>
+        <div class="slot-machine-badge">JACKPOT <b>777</b></div>
+      </div>
+
+      <div class="slot-machine" id="slot-machine">
+        <div class="slot-marquee" aria-hidden="true">
+          <span>LUCKY</span><b>777</b><span>LUCKY</span>
+        </div>
+
+        <div class="slot-window">
+          <div class="payline-line line-top"></div>
+          <div class="payline-line line-mid"></div>
+          <div class="payline-line line-bottom"></div>
+          <div id="slot-grid" class="slot-grid" aria-label="Rodillos de la tragaperras"></div>
+        </div>
+
+        <div class="slot-bulbs" aria-hidden="true">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+
+        <div class="slot-console">
+          <div class="slot-bet-box">
+            <span class="slot-label">APUESTA</span>
+            <div class="slot-bet-controls">
+              <button id="slot-bet-minus" class="slot-mini">−</button>
+              <strong id="slot-bet">1 FP</strong>
+              <button id="slot-bet-plus" class="slot-mini">+</button>
+            </div>
+            <div class="slot-quick-bets">
+              <button data-slot-bet="1">1</button>
+              <button data-slot-bet="5">5</button>
+              <button data-slot-bet="10">10</button>
+              <button data-slot-bet="25">25</button>
+              <button data-slot-bet="50">50</button>
+              <button data-slot-bet="100">100</button>
+            </div>
+          </div>
+
+          <button id="slot-spin" class="slot-spin">
+            <span>GIRAR</span>
+            <small>SPIN</small>
+          </button>
+        </div>
+
+        <div class="slot-result" id="slot-result">PREPARADO</div>
+      </div>
+
+      <div class="slot-paytable">
+        <div><b>777</b><span>×100 línea</span></div>
+        <div><b>BAR BAR BAR</b><span>×50</span></div>
+        <div><b>🍉 🍉 🍉</b><span>×32</span></div>
+        <div><b>🍇 🍇 🍇</b><span>×20</span></div>
+        <div><b>🍊 🍊 🍊</b><span>×14</span></div>
+        <div><b>🍋 🍋 🍋</b><span>×10</span></div>
+        <div><b>🍒 🍒 🍒</b><span>×7</span></div>
+        <div><b>2 IGUALES</b><span>×1 línea</span></div>
+      </div>
+      <p id="slot-status" class="slot-status">La apuesta total se reparte entre las líneas activas. Con 3 FP o más juegas las 3 líneas. Todo se guarda en tu historial.</p>
+    </section>
+
+    <section id="t-hilo" class="tab panel hidden">
+      <div class="game-hero hilo-hero">
+        <div>
+          <span class="game-kicker">♦ RISK &amp; REWARD ♦</span>
+          <h2>Higher / Lower</h2>
+          <p class="hint">Adivina si la siguiente carta será mayor o menor. Cada acierto hace crecer el bote.</p>
+        </div>
+        <div class="game-rule-badge hilo-badge"><b>×1,9</b><span>POR ACIERTO</span></div>
+      </div>
+
+      <div class="hilo-table">
+        <div class="hilo-deck-stack" aria-hidden="true">
+          <div class="deck-card deck-card-3"></div>
+          <div class="deck-card deck-card-2"></div>
+          <div class="deck-card deck-card-1"></div>
+          <span class="deck-label">NEXT CARD</span>
+        </div>
+        <div class="hilo-lights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+
+        <div class="hilo-main-card">
+          <span class="hilo-label">CARTA ACTUAL</span>
+          <div id="hl-card" class="hand mid hilo-current-hand"></div>
+          <div id="hl-pot" class="hilo-pot">Elige tu apuesta abajo y pulsa <b>Empezar</b></div>
+        </div>
+
+        <div class="hilo-history-wrap">
+          <div class="hilo-history-title"><span>CAMINO</span><b>ÚLTIMAS CARTAS</b></div>
+          <div id="hl-trail" class="hand mini hilo-trail"></div>
+        </div>
+
+        <div id="hl-ladder" class="hilo-ladder"></div>
+        <div id="hl-feedback" class="hilo-feedback">¿Será mayor o menor?</div>
+      </div>
+
+      <div class="row hilo-controls">
+        <button id="hl-start" class="main">♠ Empezar</button>
+        <button id="hl-up">Mayor ▲</button>
+        <button id="hl-down">Menor ▼</button>
+        <button id="hl-cash">💰 Cobrar</button>
+      </div>
+      <p class="hint hilo-tip">Si sale la misma carta, pierdes. Máximo 1000 FP por partida. Puedes cobrar el bote en cualquier momento.</p>
+    </section>
+
+
+    <section id="t-fortune" class="tab panel hidden">
+      <div class="fortune-hero">
+        <div>
+          <span class="game-kicker">★ HORA DE LA SUERTE ★</span>
+          <h2>Ruleta de la Fortuna</h2>
+          <p class="hint">Una tirada gratis cada hora. Premios de FP y experiencia para tu perfil.</p>
+        </div>
+        <div class="fortune-cooldown-card" id="fortune-timer-card">
+          <span>PRÓXIMA TIRADA</span>
+          <strong id="fortune-countdown">--:--:--</strong>
+          <small id="fortune-cooldown-label">Comprobando disponibilidad…</small>
+        </div>
+      </div>
+
+      <div class="fortune-layout">
+        <div class="fortune-wheel-card">
+          <div class="fortune-wheel-wrap" id="fortune-wheel-wrap">
+            <div class="fortune-wheel-glow"></div>
+            <div class="fortune-pointer" aria-hidden="true"><span></span></div>
+            <canvas id="fortune-wheel" width=520 height=520
+              role="img" aria-label="Ruleta de la Fortuna"></canvas>
+            <div class="fortune-wheel-center"><b>FORTUNA</b><span>★</span></div>
+          </div>
+          <div class="fortune-result" id="fortune-result" aria-live="polite">
+            <span>PREPARADA</span>
+            <strong>Tu suerte te espera</strong>
+            <small id="fortune-last-result">Una tirada disponible cada hora.</small>
+          </div>
+          <button id="fortune-spin" class="main fortune-spin-button" disabled>GIRAR LA RULETA</button>
+        </div>
+
+        <aside class="fortune-rewards-card">
+          <div class="fortune-rewards-heading">
+            <span>RECOMPENSAS</span>
+            <h3>¿Qué puede tocar?</h3>
+          </div>
+          <div class="fortune-rewards-list">
+            <div><b>+5 FP</b><small>61%</small></div>
+            <div><b>+10 FP</b><small>14%</small></div>
+            <div><b>+15 FP</b><small>5%</small></div>
+            <div><b>+20 FP</b><small>2,6%</small></div>
+            <div><b>+50 FP</b><small>0,2%</small></div>
+            <div><b>+20 XP</b><small>10%</small></div>
+            <div><b>+50 XP</b><small>7,2%</small></div>
+          </div>
+          <div class="fortune-balance-note"><span>MEDIA POR TIRADA</span><strong>≈ 5,8 FP</strong><small>El premio grande es deliberadamente raro para mantener la economía del casino equilibrada.</small></div>
+          <div class="fortune-note">Las probabilidades reales se deciden en Supabase. La animación solo muestra el resultado ya elegido por el servidor.</div>
+        </aside>
+      </div>
+    </section>
+
+
+    <section id="t-road" class="tab panel hidden">
+      <div class="road-hero">
+        <div>
+          <span class="game-kicker">RISK &amp; REWARD · ROAD RUSH</span>
+          <h2>Road Rush</h2>
+          <p class="hint">Avanza hacia arriba por 10 cruces. El tráfico puede atravesar la carretera desde la izquierda o la derecha; cada cruce seguro aumenta el multiplicador.</p>
+        </div>
+        <div class="road-hero-stats">
+          <div><span>RIESGO</span><b id="road-risk">12% por cruce</b></div>
+          <div><span>MÁXIMO</span><b id="road-max-multiplier">×5.33</b></div>
+        </div>
+      </div>
+
+      <div class="road-difficulties">
+        <button type="button" data-road-difficulty="easy" class="road-difficulty">
+          <span class="road-difficulty-icon road-dot-easy" aria-hidden="true"></span><strong>Fácil</strong><small>4% de choque · riesgo bajo</small><b>Máx. ×1.47</b>
+        </button>
+        <button type="button" data-road-difficulty="normal" class="road-difficulty selected">
+          <span class="road-difficulty-icon road-dot-normal" aria-hidden="true"></span><strong>Normal</strong><small>12% de choque · equilibrio</small><b>Máx. ×3.52</b>
+        </button>
+        <button type="button" data-road-difficulty="hard" class="road-difficulty">
+          <span class="road-difficulty-icon road-dot-hard" aria-hidden="true"></span><strong>Difícil</strong><small>20% de choque · alto riesgo</small><b>Máx. ×9.13</b>
+        </button>
+      </div>
+
+      <div class="road-game-shell">
+        <div class="road-meter">
+          <div><span>APUESTA</span><b id="road-stake">0 FP</b></div>
+          <div><span>MULTIPLICADOR</span><b id="road-multiplier">×1.00</b></div>
+          <div><span>COBRO POSIBLE</span><b id="road-potential">0 FP</b></div>
+          <div><span>CRUCES</span><b id="road-safe">0 / 10</b></div>
+        </div>
+
+        <div class="road-layout">
+          <div class="road-board-wrap">
+            <div class="road-finish"><span>META</span><small>10 cruces</small></div>
+            <div id="road-board" class="road-board" aria-label="Carretera Road Rush"></div>
+            <div class="road-start-line"><span>START</span></div>
+          </div>
+
+          <div class="road-control-panel">
+            <div class="road-phase" id="road-phase">Preparado para arrancar</div>
+            <div class="road-next-box"><span>PRÓXIMO</span><strong id="road-current-step">CRUCE 1</strong><small>Riesgo: <b id="road-risk-inline">12%</b></small></div>
+            <p id="road-status" class="road-status">Elige dificultad, selecciona tu apuesta con las fichas de abajo y arranca.</p>
+
+            <div class="road-actions">
+              <button id="road-start" class="main">Arrancar</button>
+              <button id="road-advance" class="road-cross-btn" disabled>Avanzar</button>
+              <button id="road-cashout" class="road-cash-btn" disabled>Cobrar</button>
+              <button id="road-replay" class="road-replay-btn hidden">↻ Nueva partida</button>
+            </div>
+
+            <div class="road-tip-card">
+              <div><span>DECISIÓN</span><b>¿Arriesgas?</b></div>
+              <p>Cada cruce seguro aumenta tu posible cobro. Puedes retirarte después de cruzar al menos uno.</p>
+            </div>
+
+            <div class="road-multipliers">
+              <div><span>FÁCIL</span><b>×1.02 → ×1.47</b></div>
+              <div><span>NORMAL</span><b>×1.11 → ×3.52</b></div>
+              <div><span>DIFÍCIL</span><b>×1.22 → ×9.13</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="hint road-footnote">El resultado de cada cruce se decide en Supabase. La animación solo representa el resultado recibido.</p>
+    </section>
+
+    <section id="t-mines" class="tab panel hidden">
+      <div class="mines-hero">
+        <div>
+          <span class="game-kicker">RISK &amp; REWARD · MINES</span>
+          <h2>Minas</h2>
+          <p class="hint">Un tablero de 5×5, gemas ocultas y una sola decisión: cuánto quieres arriesgar antes de cobrar.</p>
+        </div>
+        <div class="mines-hero-stats">
+          <div><span>CAMPO</span><b>5 × 5</b></div>
+          <div><span>MÁXIMO</span><b>5.000 FP</b></div>
+        </div>
+      </div>
+
+      <div class="mines-layout">
+        <aside class="mines-control-panel">
+          <div class="mines-control-kicker">CONFIGURACIÓN</div>
+          <div class="mines-control-block">
+            <div class="mines-control-label"><span>MINAS</span><strong id="mines-count">5</strong></div>
+            <input id="mines-slider" class="mines-slider" type="range" min="1" max="24" value="5" step="1" aria-label="Número de minas">
+            <div class="mines-range-labels"><span>1</span><span>12</span><span>24</span></div>
+          </div>
+
+          <div class="mines-risk-card">
+            <div><span>PRIMERA CASILLA</span><b id="mines-first-prob">80%</b></div>
+            <div><span>PRÓXIMO PASO</span><b id="mines-next-prob">80%</b></div>
+          </div>
+
+          <div class="mines-preview-card">
+            <div class="mines-preview-head"><span>ESCALERA</span><b id="mines-preview-mines">5 MINAS</b></div>
+            <div id="mines-preview" class="mines-preview"></div>
+          </div>
+
+          <div class="mines-bonus-card">
+            <div><span>RACHA XP</span><b>EXTRA</b></div>
+            <p>3 gemas: +5 XP · 6 gemas: +7 XP · 10 gemas: +10 XP al cobrar.</p>
+          </div>
+
+          <div class="mines-actions">
+            <button id="mines-start" class="main">Empezar partida</button>
+            <button id="mines-cashout" class="mines-cash-btn" disabled>Cobrar</button>
+            <button id="mines-new" class="mines-new-btn hidden">Nueva partida</button>
+          </div>
+          <p id="mines-status" class="mines-status">Selecciona cuántas minas quieres y prepara tu apuesta con las fichas de abajo. Máximo 250 FP.</p>
+          <div class="mines-rules">
+            <span>1–24 MINAS</span><span>99% RTP TEÓRICO</span><span>≤ 5.000 FP</span>
+          </div>
+        </aside>
+
+        <div class="mines-board-card">
+          <div class="mines-board-head">
+            <div><span>GEMAS SEGURAS</span><b id="mines-progress">0 / 20</b></div>
+            <div><span>MULTIPLICADOR</span><strong id="mines-multiplier">×1.00</strong></div>
+            <div><span>COBRO ACTUAL</span><b id="mines-potential">0 FP</b></div>
+          </div>
+
+          <div id="mines-board" class="mines-board" aria-label="Tablero Minas 5 por 5"></div>
+
+          <div class="mines-live-bar">
+            <div><span>APUESTA</span><b id="mines-stake">0 FP</b></div>
+            <div><span>PRÓXIMO MULTIPLICADOR</span><b id="mines-next-multiplier">×1.24</b></div>
+            <div><span>RIESGO ACTUAL</span><b id="mines-risk-now">20%</b></div>
+          </div>
+
+          <p class="hint mines-footnote">Las posiciones de las minas y los cobros se deciden en Supabase. El cliente solo representa el resultado recibido.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="t-dinosaur" class="tab panel hidden">
+      <div class="dino-hero">
+        <div>
+          <span class="game-kicker">EMERGENCY RUN · FODO POINTS</span>
+          <h2>Dinosaurio</h2>
+          <p class="hint">Una carrera gratuita para recuperar saldo cuando estés por debajo de 30 FP. Esquiva obstáculos y recoge FP hasta alcanzar el límite.</p>
+        </div>
+        <div class="dino-limit-card">
+          <span>LÍMITE DE RESCATE</span>
+          <strong>30 FP</strong>
+          <small>Solo disponible con menos de 30 FP</small>
+        </div>
+      </div>
+
+      <div class="dino-status-strip">
+        <div><span>TU SALDO</span><b id="dino-balance">0 FP</b></div>
+        <div><span>FP RECUPERABLES</span><b id="dino-available">30 FP</b></div>
+        <div><span>FP DE ESTA CARRERA</span><b id="dino-run-coins">0 FP</b></div>
+      </div>
+
+      <div class="dino-game-shell">
+        <div class="dino-canvas-wrap" id="dino-canvas-wrap">
+          <canvas id="dino-canvas" width="960" height="430" aria-label="Carrera del dinosaurio"></canvas>
+          <div class="dino-hud">
+            <div><span>DISTANCIA</span><b id="dino-distance">0000 m</b></div>
+            <div><span>FP RESCATADOS</span><b id="dino-score">0 / 15</b></div>
+            <div><span>RÉCORD DE CARRERA</span><b id="dino-best">0 m</b></div>
+          </div>
+          <div id="dino-overlay" class="dino-overlay">
+            <div class="dino-overlay-card">
+              <span class="dino-overlay-kicker">FODO EMERGENCY RUN</span>
+              <h3 id="dino-overlay-title">Necesitas FP</h3>
+              <p id="dino-overlay-text">Cuando tu saldo está por debajo de 30 FP puedes correr gratis para recuperar puntos.</p>
+              <button id="dino-start" class="main" type="button">Iniciar carrera</button>
+              <small>Pulsa <b>ESPACIO</b>, ↑ o toca la pista para saltar.</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="dino-controls">
+          <div class="dino-control-copy">
+            <span>OBJETIVO</span>
+            <strong>Llega hasta 30 FP</strong>
+            <p>Las monedas se acreditan una a una en Supabase. El juego se detiene automáticamente al alcanzar el límite.</p>
+          </div>
+          <div class="dino-progress-track" aria-label="Progreso hasta 30 FP">
+            <span id="dino-progress-fill"></span>
+          </div>
+          <div class="dino-actions">
+            <button id="dino-jump" type="button">Saltar</button>
+            <button id="dino-replay" type="button" class="dino-replay-btn hidden">Nueva carrera</button>
+          </div>
+          <div id="dino-message" class="dino-message">Tu saldo determina cuántos FP puedes recuperar.</div>
+        </div>
+      </div>
+
+      <div class="dino-rules">
+        <span>GRATIS</span><span>SOLO &lt; 30 FP</span><span>MÁXIMO 30 FP</span><span>SIN APUESTA</span>
+      </div>
+      <p class="hint dino-footnote">La recompensa está limitada por el servidor a 30 FP de saldo total. La carrera solo representa la acción de recoger las monedas.</p>
+    </section>
+
+    <section id="t-shop" class="tab panel hidden">
+      <div class="shop-hero">
+        <div>
+          <span class="game-kicker">THE PEDRO &amp; PACO · PERSONAL STYLE</span>
+          <h2>Fodo Shop</h2>
+          <p class="hint">Colecciona personalizaciones para tu perfil. Todo es cosmético: no cambia las probabilidades de ningún juego.</p>
+        </div>
+        <div id="shop-profile-preview" class="shop-profile-preview" aria-label="Vista previa de tu perfil"></div>
+      </div>
+
+      <div class="shop-stats">
+        <div><span>PROPIOS</span><b id="shop-owned-count">0</b><small>objetos</small></div>
+        <div><span>EQUIPADO</span><b id="shop-equipped-count">0</b><small>activos</small></div>
+        <div><span>TU SALDO</span><b id="shop-balance">0 FP</b><small>disponibles</small></div>
+      </div>
+
+      <div id="shop-filters" class="shop-filters" role="tablist" aria-label="Categorías de la tienda">
+        <button type="button" class="active" data-shop-filter="all">Destacados</button>
+        <button type="button" data-shop-filter="frame">Marcos</button>
+        <button type="button" data-shop-filter="background">Fondos</button>
+        <button type="button" data-shop-filter="title">Títulos</button>
+        <button type="button" data-shop-filter="name_color">Colores</button>
+        <button type="button" data-shop-filter="effect">Efectos</button>
+        <button type="button" data-shop-filter="avatar">Avatares</button>
+        <button type="button" data-shop-filter="owned">Colección</button>
+      </div>
+
+      <div id="shop-grid" class="shop-grid">
+        <div class="shop-empty">Cargando catálogo…</div>
+      </div>
+
+      <div class="shop-economy-note">
+        <span>ECONOMÍA</span>
+        <p>La tienda usa únicamente FP ya existentes. Comprar un objeto descuenta el precio una sola vez; después queda guardado en tu colección.</p>
+      </div>
+    </section>
+
+    <section id="t-history" class="tab panel hidden">
+      <h2>Historial de apuestas</h2>
+      <p class="hint">Aquí se muestran las apuestas que están registradas en la base de datos.</p>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr><th>Hora</th><th>Usuario</th><th>Juego</th><th>Apostó</th><th>Resultado</th><th>Detalle</th></tr>
+          </thead>
+          <tbody id="hist"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="t-multiplayer" class="tab panel hidden">
+      <div class="multi-title-row">
+        <div>
+          <span class="game-kicker">♠ ♣ EN DIRECTO ♣ ♠</span>
+          <h2>Multijugador</h2>
+          <p class="hint">Elige un juego, crea una mesa y juega en tiempo real con otros jugadores.</p>
+        </div>
+        <div class="multi-online-badge"><span class="live-dot"></span> Mesas online</div>
+      </div>
+
+      <div id="multi-hub" class="multi-hub">
+        <button class="multi-game-card active" data-multi-game="ttt">
+          <span class="multi-game-icon">⭕</span>
+          <span class="multi-game-name">Tres en raya</span>
+          <span class="multi-game-meta">1 VS 1 · con apuesta</span>
+        </button>
+        <button class="multi-game-card" data-multi-game="poker">
+          <span class="multi-game-icon">🃏</span>
+          <span class="multi-game-name">Texas Hold'em</span>
+          <span class="multi-game-meta">2–6 jugadores · Poker</span>
+        </button>
+      </div>
+
+      <div id="multi-game-ttt" class="multi-subview">
+        <div class="multi-subview-head">
+          <div>
+            <span class="game-kicker">⭕ CLÁSICO ONLINE</span>
+            <h3>Tres en raya</h3>
+          </div>
+          <button class="multi-back-hub">← Juegos</button>
+        </div>
+        <p id="ttt-stake-info" class="ttt-stake-info">Apuesta de la partida: <b>0 FP</b>. Usa las fichas de abajo antes de crearla.</p>
+        <div class="multi-grid">
+          <div>
+            <div class="row multi-actions">
+              <button id="ttt-create" class="main">Crear partida</button>
+              <button id="ttt-refresh">Actualizar</button>
+            </div>
+            <div id="ttt-status" class="status-box">No estás en una partida.</div>
+            <div id="ttt-lobby" class="lobby"></div>
+          </div>
+
+          <div>
+            <div id="ttt-board" class="ttt-board"></div>
+            <p id="ttt-turn" class="ttt-turn">Crea o únete a una partida.</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="multi-game-poker" class="multi-subview hidden">
+        <div class="multi-subview-head">
+          <div>
+            <span class="game-kicker">♠ NO-LIMIT TEXAS HOLD'EM ♠</span>
+            <h3>Poker</h3>
+          </div>
+          <button class="multi-back-hub">← Juegos</button>
+        </div>
+
+        <div id="poker-lobby-view">
+          <div class="poker-create-panel">
+            <div>
+              <span class="poker-kicker">CREA TU MESA</span>
+              <h4>Abre una partida</h4>
+              <p class="hint">Hasta 6 jugadores · ciegas 1 / 2 FP · el anfitrión inicia la partida.</p>
+            </div>
+            <div class="poker-create-fields">
+              <label>Nombre de mesa<input id="poker-table-name" maxlength="28" value="Mesa de lujo"></label>
+              <label>Entrada<select id="poker-buy-in"><option value="20">20 FP</option><option value="50" selected>50 FP</option><option value="100">100 FP</option><option value="250">250 FP</option><option value="500">500 FP</option></select></label>
+              <div class="poker-seat-limit"><span>AFORO</span><strong>Hasta 6 jugadores</strong><small>El anfitrión decide cuándo empezar.</small></div>
+              <button id="poker-create" class="main">Crear mesa</button>
+            </div>
+          </div>
+          <div class="poker-lobby-heading"><span>MESAS ABIERTAS</span><button id="poker-refresh">Actualizar</button></div>
+          <div id="poker-lobby" class="poker-lobby"></div>
+        </div>
+
+        <div id="poker-table-view" class="hidden">
+          <div class="poker-table-head">
+            <div><span id="poker-table-sub" class="poker-kicker">MESA</span><h4 id="poker-table-title">Texas Hold'em</h4></div>
+            <div class="poker-head-actions"><button id="poker-leave">Salir de la mesa</button></div>
+          </div>
+
+          <div id="poker-waiting-room" class="poker-waiting-room hidden">
+            <div class="poker-waiting-copy">
+              <span class="poker-kicker">SALA DE ESPERA</span>
+              <h4 id="poker-waiting-title">Mesa preparada</h4>
+              <p>Los jugadores pueden entrar hasta un máximo de 6. El anfitrión decide cuándo empezar.</p>
+            </div>
+            <div class="poker-waiting-players-head"><span>JUGADORES EN LA MESA</span><strong id="poker-waiting-count">0 / 6</strong></div>
+            <div id="poker-waiting-players" class="poker-waiting-players"></div>
+            <div class="poker-waiting-actions">
+              <button id="poker-start-hand" class="main">♠ Empezar partida</button>
+              <span id="poker-waiting-message" class="poker-waiting-hint">Esperando jugadores…</span>
+            </div>
+          </div>
+
+          <div id="poker-table" class="poker-table">
+            <div class="poker-light-ring"></div>
+            <div id="poker-result-banner" class="poker-result-banner hidden"></div>
+            <div class="poker-pot-display"><span>BOTE</span><strong id="poker-pot">0 FP</strong></div>
+            <div class="poker-community" id="poker-community"></div>
+            <div class="poker-deck-visual" aria-hidden="true"><span></span><span></span><span></span><b>DECK</b></div>
+            <div class="poker-dealer-message"><span>DEALER</span><b id="poker-dealer-text">El dealer está preparado.</b></div>
+            <div id="poker-seats" class="poker-seats"></div>
+            <div id="poker-action-line" class="poker-action-line">Esperando jugadores…</div>
+          </div>
+
+          <div class="poker-my-hand-panel">
+            <div class="poker-my-head"><div><span>MI MANO</span><strong id="poker-my-hand-name">—</strong></div><div class="poker-my-stack"><span>STACK</span><b id="poker-my-stack">0 FP</b></div></div>
+            <div id="poker-hole-cards" class="poker-hole-cards"></div>
+          </div>
+
+          <div class="poker-actions-panel">
+            <div class="poker-bet-summary">
+              <div class="poker-to-call" id="poker-to-call">A pagar: 0 FP</div>
+              <div class="poker-raise-summary">SUBIDA · <b id="poker-raise-preview">—</b></div>
+            </div>
+            <div class="poker-raise-box">
+              <label>Subir a <input id="poker-raise-amount" type="number" min="2" step="1" value="6"></label>
+              <button id="poker-raise-min" type="button">MÍN.</button>
+              <button id="poker-raise-pot" type="button">BOTE</button>
+            </div>
+            <div class="poker-action-buttons">
+              <button id="poker-fold" class="danger">Retirarse</button>
+              <button id="poker-check">Pasar</button>
+              <button id="poker-call">Pagar</button>
+              <button id="poker-raise" class="main">Subir</button>
+              <button id="poker-allin" class="allin-action">ALL-IN</button>
+            </div>
+            <p class="poker-chip-help">Usa las fichas de abajo para sumar rápidamente a tu subida.</p>
+          </div>
+
+          <div class="poker-table-bottom">
+            <button id="poker-next-hand" class="main hidden">♠ Nueva mano</button>
+            <button id="poker-rebuy">Recomprar entrada</button>
+            <span id="poker-status" class="poker-status">Esperando al menos 2 jugadores con stack.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <div id="profile-modal" class="profile-modal hidden" aria-hidden="true">
+      <div id="profile-modal-backdrop" class="profile-modal-backdrop"></div>
+      <section class="profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
+        <button id="profile-modal-close" class="profile-modal-close" type="button" aria-label="Cerrar">×</button>
+        <div id="profile-modal-body">Cargando perfil…</div>
+      </section>
+    </div>
+
+    <div id="dock" data-casino-build="v36.4">
+      <div id="chips"></div>
+      <div id="dockv"></div>
+      <button id="dclr" title="Reiniciar apuesta">↺</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js?v=36.4"></script>
+  <script src="js/road.js?v=36.4"></script>
+  <script src="js/fortune.js?v=36.4"></script>
+  <script src="js/dino.js?v=36.4"></script>
+  <script src="js/shop.js?v=36.4"></script>
+  <script src="js/app-v36.4.js?v=36.4"></script>
+  <script src="js/profile.js?v=36.4"></script>
+  <script src="js/sidebar.js?v=36.4"></script>
+  <script src="js/chat.js?v=36.4"></script>
+  <script src="js/multiplayer.js?v=36.4"></script>
+  <script src="js/games.js?v=36.4"></script>
+  <script src="js/slots.js?v=36.4"></script>
+  <script src="js/mines.js?v=36.4"></script>
+  <footer class="site-version" aria-label="Versión del sitio"><span>v36.4</span><i>•</i><span>STABLE</span></footer>
+  <script src="js/poker.js?v=36.4"></script>
+</body>
+</html>
