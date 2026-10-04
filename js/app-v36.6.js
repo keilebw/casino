@@ -208,14 +208,14 @@ const Casino = {
 
     const pokerTable = activeTab === 'poker' && typeof window.isPokerTableActive === 'function' && window.isPokerTableActive();
     const minesTab = activeTab === 'mines';
-    const hiloTab = activeTab === 'hilo';
+    const rideBusTab = activeTab === 'ridebus';
     const roadTab = activeTab === 'road';
 
     // Los límites de stake son específicos de cada juego.
     // IMPORTANTE: el saldo NO recorta visualmente la apuesta preparada.
     // El servidor comprueba si hay saldo suficiente al iniciar la partida.
     if (!pokerTable) {
-      const gameCap = minesTab ? 250 : hiloTab ? 1000 : roadTab ? 500 : null;
+      const gameCap = minesTab ? 250 : rideBusTab ? 1000 : roadTab ? 500 : null;
       if (gameCap !== null) this.stake = Math.min(this.stake, gameCap);
     }
 
@@ -227,7 +227,7 @@ const Casino = {
         ? `Subir a: <b>${Number($('#poker-raise-amount')?.value || 0)}</b> FP<br>Elige fichas`
         : minesTab
           ? `Apuesta: <b>${this.stake}</b> FP<br>Máximo: <b>250 FP</b>`
-          : hiloTab
+          : rideBusTab
             ? `Apuesta: <b>${this.stake}</b> FP<br>Máximo: <b>1000 FP</b>`
             : `Apuesta: <b>${this.stake}</b> FP<br>Elige una ficha`;
 
@@ -330,6 +330,7 @@ async function start(user) {
   if (window.initMultiplayer) await window.initMultiplayer();
   if (window.initDinosaurio) window.initDinosaurio();
   if (window.initSidebar) await window.initSidebar();
+  if (window.refreshRideBus) await window.refreshRideBus();
 }
 
 async function restoreSession() {
@@ -413,7 +414,7 @@ for (const [value, chipColor] of CHIPS) {
     const activeTab = currentCasinoTab();
     const roulette = activeTab === 'roulette';
     const minesTab = activeTab === 'mines';
-    const hiloTab = activeTab === 'hilo';
+    const rideBusTab = activeTab === 'ridebus';
     const roadTab = activeTab === 'road';
     const minesActive = activeTab === 'mines' && typeof window.isMinesActive === 'function' && window.isMinesActive();
     const pokerTable = activeTab === 'poker' && typeof window.isPokerTableActive === 'function' && window.isPokerTableActive();
@@ -425,18 +426,15 @@ for (const [value, chipColor] of CHIPS) {
       return;
     } else {
       if (minesActive) return;
-      const maxStake = minesTab ? 250 : hiloTab ? 1000 : roadTab ? 500 : Number.MAX_SAFE_INTEGER;
+      const maxStake = minesTab ? 250 : rideBusTab ? 1000 : roadTab ? 500 : Number.MAX_SAFE_INTEGER;
       // Blackjack: sin límite específico. Las fichas altas seleccionan directamente
       // la apuesta y NO se recortan al saldo en el selector. El RPC del servidor
       // rechaza únicamente una apuesta que supere el saldo real disponible.
-      // Higher / Lower: máximo 1000 FP.
+      // Ride the Bus: máximo 1000 FP.
       if (value >= 1000) {
         Casino.stake = Math.min(value, maxStake);
       } else {
         Casino.stake = Math.min(Casino.stake + value, maxStake);
-      }
-      if (roadTab && typeof window.roadStakeChanged === 'function') {
-        window.roadStakeChanged(Casino.stake);
       }
     }
 
@@ -455,9 +453,6 @@ $('#dclr').onclick = () => {
   }
   Casino.stake = 0;
   const roadTab = activeTab === 'road';
-  if (roadTab && typeof window.roadStakeChanged === 'function') {
-    window.roadStakeChanged(Casino.stake);
-  }
   Casino.dock();
 };
 
@@ -491,6 +486,7 @@ $('#nav').onclick = event => {
   if (tab === 'history') Casino.renderHistory();
   if (tab === 'fortune' && window.refreshFortuneStatus) window.refreshFortuneStatus();
   if (tab === 'road' && window.refreshRoad) window.refreshRoad();
+  if (tab === 'ridebus' && window.refreshRideBus) window.refreshRideBus();
   if (tab === 'mines' && window.refreshMines) window.refreshMines();
   if (tab === 'dinosaur' && window.refreshDinosaurStatus) window.refreshDinosaurStatus();
   if (tab === 'shop' && window.refreshShop) window.refreshShop();

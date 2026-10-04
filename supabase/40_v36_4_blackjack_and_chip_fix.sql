@@ -1,6 +1,6 @@
 -- V36.4 — arreglo definitivo de fichas y Blackjack
 -- 1) Las fichas de Blackjack/Higher-Lower ya no pasan por Road Rush (500 FP).
---    El arreglo del frontend está en js/app-v36.4.js.
+--    El arreglo del frontend está integrado en la versión V36.5.
 -- 2) Blackjack inicia siempre con active_hand=1 y limpia el estado de una partida anterior.
 -- 3) blackjack_hit tolera partidas normales antiguas con active_hand=0 y las recupera como mano 1.
 -- 4) Higher / Lower queda fijado a un máximo de 1000 FP también en la tabla y RPC.

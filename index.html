@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>The Pedro &amp; Paco Casino</title>
-  <link rel="stylesheet" href="css/style.css?v=36.1">
+  <link rel="stylesheet" href="css/style.css?v=36.8">
 </head>
 <body>
   <main id="login" class="panel">
@@ -34,7 +34,7 @@
       <nav id="nav">
         <button data-t="roulette" class="on">Ruleta</button>
         <button data-t="blackjack">Blackjack</button>
-        <button data-t="hilo">Higher / Lower</button>
+        <button data-t="ridebus">Ride the Bus</button>
         <button data-t="slots">Tragaperras</button>
         <button data-t="fortune">Fortuna</button>
         <button data-t="road">Road Rush</button>
@@ -228,47 +228,56 @@
       <p id="slot-status" class="slot-status">La apuesta total se reparte entre las líneas activas. Con 3 FP o más juegas las 3 líneas. Todo se guarda en tu historial.</p>
     </section>
 
-    <section id="t-hilo" class="tab panel hidden">
-      <div class="game-hero hilo-hero">
+    <section id="t-ridebus" class="tab panel hidden">
+      <div class="game-hero bus-hero">
         <div>
-          <span class="game-kicker">♦ RISK &amp; REWARD ♦</span>
-          <h2>Higher / Lower</h2>
-          <p class="hint">Adivina si la siguiente carta será mayor o menor. Cada acierto hace crecer el bote.</p>
+          <span class="game-kicker">🚌 RIDE THE BUS 🚌</span>
+          <h2>Ride the Bus</h2>
+          <p class="hint">Supera las 4 paradas y aumenta el bote. Puedes cobrar después de cada acierto.</p>
         </div>
-        <div class="game-rule-badge hilo-badge"><b>×1,9</b><span>POR ACIERTO</span></div>
+        <div class="game-rule-badge bus-badge"><b>4 PARADAS</b><span>HASTA 5000 FP</span></div>
       </div>
 
-      <div class="hilo-table">
-        <div class="hilo-deck-stack" aria-hidden="true">
+      <div class="bus-table">
+        <div class="bus-deck-stack" aria-hidden="true">
           <div class="deck-card deck-card-3"></div>
           <div class="deck-card deck-card-2"></div>
           <div class="deck-card deck-card-1"></div>
-          <span class="deck-label">NEXT CARD</span>
+          <span class="deck-label">RIDE THE BUS</span>
         </div>
-        <div class="hilo-lights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="bus-lights" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 
-        <div class="hilo-main-card">
-          <span class="hilo-label">CARTA ACTUAL</span>
-          <div id="hl-card" class="hand mid hilo-current-hand"></div>
-          <div id="hl-pot" class="hilo-pot">Elige tu apuesta abajo y pulsa <b>Empezar</b></div>
+        <div class="bus-route" aria-label="Progreso de Ride the Bus">
+          <div class="bus-stop" data-step="1"><b>1</b><span>COLOR</span><small>×2,00</small></div>
+          <div class="bus-line"></div>
+          <div class="bus-stop" data-step="2"><b>2</b><span>ALTA / BAJA</span><small>×3,00</small></div>
+          <div class="bus-line"></div>
+          <div class="bus-stop" data-step="3"><b>3</b><span>DENTRO / FUERA</span><small>×4,00</small></div>
+          <div class="bus-line"></div>
+          <div class="bus-stop" data-step="4"><b>4</b><span>PALO</span><small>×10,00</small></div>
         </div>
 
-        <div class="hilo-history-wrap">
-          <div class="hilo-history-title"><span>CAMINO</span><b>ÚLTIMAS CARTAS</b></div>
-          <div id="hl-trail" class="hand mini hilo-trail"></div>
+        <div class="bus-cards-area">
+          <div class="bus-card-caption" id="bus-card-caption">PRIMERA CARTA</div>
+          <div id="bus-card" class="hand mid bus-current-hand"></div>
+          <div id="bus-range" class="bus-range hidden"></div>
+          <div id="bus-pot" class="bus-pot">Elige tu apuesta abajo y pulsa <b>Empezar</b></div>
         </div>
 
-        <div id="hl-ladder" class="hilo-ladder"></div>
-        <div id="hl-feedback" class="hilo-feedback">¿Será mayor o menor?</div>
+        <div class="bus-history-wrap">
+          <div class="bus-history-title"><span>RECORRIDO</span><b>CARTAS</b></div>
+          <div id="bus-trail" class="hand mini bus-trail"></div>
+        </div>
+
+        <div id="bus-feedback" class="bus-feedback idle">El autobús está en la parada 1.</div>
       </div>
 
-      <div class="row hilo-controls">
-        <button id="hl-start" class="main">♠ Empezar</button>
-        <button id="hl-up">Mayor ▲</button>
-        <button id="hl-down">Menor ▼</button>
-        <button id="hl-cash">💰 Cobrar</button>
+      <div id="bus-choices" class="row bus-choices"></div>
+      <div class="row bus-controls">
+        <button id="bus-start" class="main">🚌 Empezar</button>
+        <button id="bus-cash" disabled>💰 Cobrar bote</button>
       </div>
-      <p class="hint hilo-tip">Si sale la misma carta, pierdes. Máximo 1000 FP por partida. Puedes cobrar el bote en cualquier momento.</p>
+      <p class="hint bus-tip">Máximo 1000 FP por partida. Bote máximo 5000 FP. Fallar cualquier parada termina la partida y pierdes la apuesta inicial. Puedes cobrar tras cualquier acierto.</p>
     </section>
 
 
@@ -576,7 +585,7 @@
       <div class="multi-title-row">
         <div>
           <span class="game-kicker">♠ ♣ EN DIRECTO ♣ ♠</span>
-          <h2>Multijugador</h2>
+          <h2>Multijugador <span class="multi-beta-badge">BETA</span></h2>
           <p class="hint">Elige un juego, crea una mesa y juega en tiempo real con otros jugadores.</p>
         </div>
         <div class="multi-online-badge"><span class="live-dot"></span> Mesas online</div>
@@ -722,7 +731,7 @@
       </section>
     </div>
 
-    <div id="dock" data-casino-build="v36.4">
+    <div id="dock" data-casino-build="v36.13">
       <div id="chips"></div>
       <div id="dockv"></div>
       <button id="dclr" title="Reiniciar apuesta">↺</button>
@@ -730,20 +739,20 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase-config.js?v=36.4"></script>
-  <script src="js/road.js?v=36.4"></script>
-  <script src="js/fortune.js?v=36.4"></script>
-  <script src="js/dino.js?v=36.4"></script>
-  <script src="js/shop.js?v=36.4"></script>
-  <script src="js/app-v36.4.js?v=36.4"></script>
-  <script src="js/profile.js?v=36.4"></script>
-  <script src="js/sidebar.js?v=36.4"></script>
-  <script src="js/chat.js?v=36.4"></script>
-  <script src="js/multiplayer.js?v=36.4"></script>
-  <script src="js/games.js?v=36.4"></script>
-  <script src="js/slots.js?v=36.4"></script>
-  <script src="js/mines.js?v=36.4"></script>
-  <footer class="site-version" aria-label="Versión del sitio"><span>v36.4</span><i>•</i><span>STABLE</span></footer>
-  <script src="js/poker.js?v=36.4"></script>
+  <script src="js/supabase-config.js?v=36.6"></script>
+  <script src="js/road.js?v=36.6"></script>
+  <script src="js/fortune.js?v=36.6"></script>
+  <script src="js/dino.js?v=36.6"></script>
+  <script src="js/shop.js?v=36.6"></script>
+  <script src="js/app-v36.6.js?v=36.7"></script>
+  <script src="js/profile.js?v=36.6"></script>
+  <script src="js/sidebar.js?v=36.6"></script>
+  <script src="js/chat.js?v=36.6"></script>
+  <script src="js/multiplayer.js?v=36.6"></script>
+  <script src="js/games-v36.10.js?v=36.12"></script>
+  <script src="js/slots.js?v=36.6"></script>
+  <script src="js/mines.js?v=36.6"></script>
+  <footer class="site-version" aria-label="Versión del sitio"><span>v36.13</span><i>•</i><span>STABLE</span></footer>
+  <script src="js/poker.js?v=36.6"></script>
 </body>
 </html>

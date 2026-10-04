@@ -1055,226 +1055,349 @@ window.blackjackUpdateBetDisplay = blackjackUpdateBetDisplay;
 
 
 // ============================================================
-// HIGHER / LOWER
+// RIDE THE BUS
 // ============================================================
 
-const hilo = {
+const rideBus = {
   bet: 0,
   pot: 0,
-  current: null,
-  trail: [],
-  live: false
+  round: 0,
+  cards: [],
+  live: false,
+  starting: false
 };
 
-function hiloUI() {
-  $('#hl-start').disabled = hilo.live;
-  $('#hl-up').disabled = !hilo.live;
-  $('#hl-down').disabled = !hilo.live;
-  $('#hl-cash').disabled = !hilo.live;
+const RIDE_BUS_STEPS = [
+  { name: 'COLOR', multiplier: 1.50 },
+  { name: 'ALTA / BAJA', multiplier: 1.80 },
+  { name: 'DENTRO / FUERA', multiplier: 2.20 },
+  { name: 'PALO', multiplier: 5.00 }
+];
 
-  $('#hl-pot').textContent = hilo.live
-    ? `Bote: ${hilo.pot} FP`
-    : 'Elige tu apuesta abajo y pulsa Empezar';
+function rideBusUI() {
+  const start = $('#bus-start');
+  const cash = $('#bus-cash');
+  if (!start || !cash) return;
 
-  $('#hl-ladder').innerHTML = [1, 2, 3, 4, 5]
-    .map(level => {
-      const expected = Math.round(hilo.pot * Math.pow(1.9, level) / Math.max(1, hilo.bet));
-      const active = hilo.live && level === Math.round(Math.log(hilo.pot / hilo.bet) / Math.log(1.9)) + 1;
-      return `<span class="${active ? 'on' : ''}">${level} acierto${level > 1 ? 's' : ''}: ${hilo.live ? expected : '·'} FP</span>`;
-    })
-    .join('');
+  start.disabled = rideBus.live || rideBus.starting;
+  cash.disabled = !rideBus.live;
+
+  const pot = $('#bus-pot');
+  if (pot) {
+    pot.innerHTML = rideBus.live
+      ? `Bote: <b>${rideBus.pot} FP</b>`
+      : 'Elige tu apuesta abajo y pulsa <b>Empezar</b>';
+  }
+
+  document.querySelectorAll('.bus-stop').forEach(stop => {
+    const step = Number(stop.dataset.step || 0);
+    stop.classList.toggle('current', rideBus.live && step === rideBus.round);
+    stop.classList.toggle('done', rideBus.live && step < rideBus.round);
+  });
+
+  rideBusRenderChoices();
+  rideBusUpdateRange();
 }
 
-function hiloShow() {
-  if (!hilo.current) return;
-
-  const currentCard = cardEl(hilo.current);
-  currentCard.classList.add('hilo-enter');
-  $('#hl-card').replaceChildren(currentCard);
-
-  $('#hl-trail').replaceChildren(
-    ...hilo.trail.slice(-12).map((card, index) => {
-      const element = cardEl(card);
-      element.style.animation = 'none';
-      element.style.opacity = '0.76';
-      element.style.setProperty('--trail-index', index);
-      return element;
-    })
-  );
-}
-
-function hiloFeedback(text, type = '') {
-  const box = $('#hl-feedback');
+function rideBusFeedback(text, type = 'idle') {
+  const box = $('#bus-feedback');
   if (!box) return;
-  box.className = `hilo-feedback ${type}`;
+  box.className = `bus-feedback ${type}`;
   box.textContent = text;
   box.classList.remove('flash');
   void box.offsetWidth;
   box.classList.add('flash');
 }
 
-function hiloIdle() {
-  $('#hl-card').replaceChildren(
-    Object.assign(cardEl({ r: 0, s: '♠' }, true), { style: '' })
-  );
-  $('#hl-trail').replaceChildren(...ghost(3));
-  hiloFeedback('¿Será mayor o menor?', 'idle');
+function rideBusShow() {
+  const cardHost = $('#bus-card');
+  const trailHost = $('#bus-trail');
+  const caption = $('#bus-card-caption');
+  if (!cardHost || !trailHost) return;
+
+  const current = rideBus.cards.at(-1);
+  if (current) {
+    // En la primera parada la carta inicial permanece boca abajo hasta
+    // que el jugador elige rojo o negro. Después pasa a ser la carta
+    // de referencia para la parada 2.
+    const element = rideBus.round === 1 && rideBus.cards.length === 1
+      ? cardEl({ r: 0, s: '♠' }, true)
+      : cardEl(current);
+    cardHost.replaceChildren(element);
+    if (rideBus.round !== 1 || rideBus.cards.length !== 1) {
+      element.classList.add('bus-card-enter');
+    }
+  } else {
+    cardHost.replaceChildren(...ghost(1));
+  }
+
+  trailHost.replaceChildren(...rideBus.cards.slice(0, -1).map((card, index) => {
+    const element = cardEl(card);
+    element.style.animation = 'none';
+    element.style.opacity = '0.78';
+    element.style.setProperty('--trail-index', index);
+    return element;
+  }));
+
+  if (caption) {
+    caption.textContent = rideBus.round === 1 ? 'PRIMERA CARTA · OCULTA'
+      : rideBus.round === 2 ? 'CARTA PARA ALTA / BAJA'
+      : rideBus.round === 3 ? 'COMPARA LAS DOS CARTAS'
+      : rideBus.round === 4 ? 'ELIGE EL PALO' : 'RUTA TERMINADA';
+  }
 }
 
-let hiloStarting = false;
+function rideBusUpdateRange() {
+  const range = $('#bus-range');
+  if (!range) return;
 
-function hiloShuffleAnimation(active) {
-  const deck = document.querySelector('.hilo-deck-stack');
-  const card = $('#hl-card');
-  if (deck) deck.classList.toggle('shuffle-active', active);
-  if (card) card.classList.toggle('shuffle-card', active);
+  if (rideBus.round !== 3 || rideBus.cards.length < 2 || !rideBus.live) {
+    range.classList.add('hidden');
+    range.replaceChildren();
+    return;
+  }
+
+  range.classList.remove('hidden');
+  const a = rideBus.cards[rideBus.cards.length - 2];
+  const b = rideBus.cards[rideBus.cards.length - 1];
+  const low = Math.min(a.r, b.r);
+  const high = Math.max(a.r, b.r);
+  range.innerHTML = `<span>INICIO: <b>${RANKS[a.r]}</b></span><span>FIN: <b>${RANKS[b.r]}</b></span><strong>${low === high ? 'SIN INTERVALO' : `${RANKS[low]} — ${RANKS[high]}`}</strong>`;
 }
 
-async function hiloAnimateReveal(card) {
-  const host = $('#hl-card');
-  host.classList.add('hilo-dealing');
+function rideBusOptionsForRound() {
+  switch (rideBus.round) {
+    case 1:
+      return [
+        ['red', 'Rojo ♥♦'],
+        ['black', 'Negro ♠♣']
+      ];
+    case 2:
+      return [
+        ['higher', 'Mayor ▲'],
+        ['lower', 'Menor ▼']
+      ];
+    case 3:
+      return [
+        ['inside', 'Dentro ◇'],
+        ['outside', 'Fuera ◇']
+      ];
+    case 4:
+      return SUITS.map(suit => [suit, `${suit} ${suit === '♥' ? 'Corazones' : suit === '♦' ? 'Diamantes' : suit === '♣' ? 'Tréboles' : 'Picas'}`]);
+    default:
+      return [];
+  }
+}
+
+function rideBusRenderChoices() {
+  const box = $('#bus-choices');
+  if (!box) return;
+  box.replaceChildren();
+
+  if (!rideBus.live) return;
+
+  rideBusOptionsForRound().forEach(([choice, label]) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'bus-choice';
+    button.textContent = label;
+    button.onclick = () => rideBusGuess(choice);
+    box.append(button);
+  });
+}
+
+function rideBusIdle() {
+  rideBus.bet = 0;
+  rideBus.pot = 0;
+  rideBus.round = 0;
+  rideBus.cards = [];
+  rideBus.live = false;
+  rideBus.starting = false;
+  $('#bus-card')?.replaceChildren(...ghost(1));
+  $('#bus-trail')?.replaceChildren(...ghost(3));
+  $('#bus-range')?.classList.add('hidden');
+  rideBusFeedback('El autobús está en la parada 1.', 'idle');
+  rideBusUI();
+}
+
+async function rideBusAnimateCard(card) {
+  const host = $('#bus-card');
+  if (!host) return;
+  host.classList.add('bus-dealing');
   host.replaceChildren();
   const back = cardEl({ r: 0, s: '♠' }, true);
-  back.classList.add('hilo-flying-back');
+  back.classList.add('bus-flying-back');
   host.append(back);
   playCardSound('deal');
-  await wait(320);
-
-  const face = cardEl(card, false);
-  face.classList.add('hilo-enter');
+  await wait(300);
+  const face = cardEl(card);
+  face.classList.add('bus-card-enter');
   host.replaceChildren(face);
   playCardSound('flip');
-  await wait(420);
-  host.classList.remove('hilo-dealing');
+  await wait(430);
+  host.classList.remove('bus-dealing');
 }
 
-$('#hl-start').onclick = async () => {
-  if (hiloStarting) return;
+async function rideBusStart() {
+  if (rideBus.starting || rideBus.live) return;
   const bet = Casino.bet();
   if (!bet) return;
   if (bet > 1000) {
-    hiloFeedback('La apuesta máxima de Higher / Lower es de 1000 FP.', 'lose');
-    Casino.toast('Higher / Lower permite apuestas de hasta 1000 FP.');
-    Casino.dock();
+    Casino.toast('Ride the Bus permite apuestas de hasta 1000 FP.');
     return;
   }
 
-  hiloStarting = true;
-  $('#hl-start').disabled = true;
-  $('#hl-up').disabled = true;
-  $('#hl-down').disabled = true;
-  $('#hl-cash').disabled = true;
-  hiloShuffleAnimation(true);
+  rideBus.starting = true;
+  rideBusUI();
+  rideBusFeedback('Barajando el autobús…', 'working');
   playCardSound('shuffle');
-  hiloFeedback('Barajando…', 'working');
 
   try {
-    const { data, error } = await supabaseClient.rpc('hilo_start_limited', {
+    const { data, error } = await supabaseClient.rpc('ride_bus_start', {
       p_token: Casino.token,
       p_bet: bet
     });
-
     if (error) throw error;
-    if (!data || !data.current_card) {
-      throw new Error('Respuesta inesperada de Higher / Lower.');
-    }
+    if (!data || !data.cards?.length) throw new Error('Respuesta inesperada de Ride the Bus.');
 
     Casino.clearStake();
-    hilo.bet = bet;
-    hilo.pot = Number(data.pot || bet);
-    hilo.current = data.current_card;
-    hilo.trail = data.trail || [];
-    hilo.live = data.status === 'live';
+    rideBus.bet = bet;
+    rideBus.pot = Number(data.pot || bet);
+    rideBus.round = Number(data.round || 1);
+    rideBus.cards = Array.isArray(data.cards) ? data.cards : [];
+    rideBus.live = data.status === 'live';
+    rideBus.starting = false;
     Casino.setBalance(data.coins);
 
-    await wait(420);
-    hiloShuffleAnimation(false);
-    await hiloAnimateReveal(hilo.current);
-    hiloShow();
-    hiloUI();
-    hiloFeedback('Elige: ¿mayor o menor?', 'ready');
+    // La primera carta se queda boca abajo: el jugador aún no conoce su color.
+    const firstBack = cardEl({ r: 0, s: '♠' }, true);
+    firstBack.classList.add('bus-card-enter');
+    $('#bus-card')?.replaceChildren(firstBack);
+    rideBusShow();
+    rideBusUI();
+    rideBusFeedback('Parada 1 · ¿Rojo o negro?', 'ready');
   } catch (error) {
     console.error(error);
-    hiloShuffleAnimation(false);
-    hiloStarting = false;
-    hilo.live = false;
-    hiloUI();
-    hiloFeedback('No se pudo iniciar la partida.', 'lose');
-    Casino.toast(error?.message || 'No se pudo iniciar Higher / Lower.');
-    return;
-  }
-
-  hiloStarting = false;
-  hiloUI();
-};
-
-async function hiloGuess(up) {
-  if (!hilo.live) return;
-
-  $('#hl-up').disabled = true;
-  $('#hl-down').disabled = true;
-  playCardSound('flip');
-  hiloFeedback('Revelando la siguiente carta…', 'working');
-
-  const { data, error } = await supabaseClient.rpc('hilo_guess', {
-    p_token: Casino.token,
-    p_up: up
-  });
-
-  if (error) {
-    console.error(error);
-    Casino.toast(error.message);
-    hiloUI();
-    hiloFeedback('Ha ocurrido un error. Vuelve a intentarlo.', 'lose');
-    return;
-  }
-
-  hilo.current = data.current_card;
-  hilo.trail = data.trail || hilo.trail;
-  hilo.pot = Number(data.pot || 0);
-  hilo.live = data.status === 'live';
-
-  Casino.setBalance(data.coins);
-  await hiloAnimateReveal(hilo.current);
-  hiloShow();
-  hiloUI();
-
-  if (!hilo.live) {
-    const delta = Number(data.delta || 0);
-    hiloFeedback(delta > 0 ? `¡Acertaste! +${delta} FP` : delta < 0 ? `Fin de partida · −${Math.abs(delta)} FP` : 'Partida terminada', delta > 0 ? 'win' : delta < 0 ? 'lose' : 'tie');
-    playCardSound(delta > 0 ? 'win' : 'lose');
-    Casino.showGameResult(data, 'Higher / Lower');
-  } else {
-    hiloFeedback('¡Nueva carta! Sigue eligiendo.', 'ready');
+    rideBus.starting = false;
+    rideBus.live = false;
+    rideBusUI();
+    rideBusFeedback('No se pudo iniciar Ride the Bus.', 'lose');
+    Casino.toast(error?.message || 'No se pudo iniciar Ride the Bus.');
   }
 }
 
-$('#hl-up').onclick = () => hiloGuess(true);
-$('#hl-down').onclick = () => hiloGuess(false);
+async function rideBusGuess(choice) {
+  if (!rideBus.live || rideBus.starting) return;
 
-$('#hl-cash').onclick = async () => {
-  if (!hilo.live) return;
+  rideBus.starting = true;
+  rideBusUI();
+  rideBusFeedback('Revelando la siguiente carta…', 'working');
+  playCardSound('flip');
 
-  const { data, error } = await supabaseClient.rpc('hilo_cashout', {
+  try {
+    const { data, error } = await supabaseClient.rpc('ride_bus_guess', {
+      p_token: Casino.token,
+      p_choice: choice
+    });
+    if (error) throw error;
+
+    rideBus.cards = Array.isArray(data.cards) ? data.cards : rideBus.cards;
+    rideBus.pot = Number(data.pot || 0);
+    rideBus.round = Number(data.round || 0);
+    rideBus.live = data.status === 'live';
+    rideBus.starting = false;
+    Casino.setBalance(data.coins);
+
+    const current = rideBus.cards.at(-1);
+    if (current) await rideBusAnimateCard(current);
+    rideBusShow();
+    rideBusUI();
+
+    if (rideBus.live) {
+      const next = rideBus.round === 2 ? '¿Mayor o menor?'
+        : rideBus.round === 3 ? '¿Dentro o fuera del intervalo?'
+        : '¿Qué palo saldrá?';
+      rideBusFeedback(`¡Acertaste! ${next}`, 'win');
+      playCardSound('win');
+    } else {
+      const delta = Number(data.delta || 0);
+      if (delta > 0) {
+        rideBusFeedback(`¡Ruta completa! Has ganado +${delta} FP`, 'win');
+        playCardSound('win');
+      } else {
+        rideBusFeedback('Has fallado la parada · apuesta perdida', 'lose');
+        playCardSound('lose');
+      }
+      Casino.showGameResult(data, 'Ride the Bus');
+    }
+  } catch (error) {
+    console.error(error);
+    rideBus.starting = false;
+    rideBusUI();
+    rideBusFeedback('No se pudo resolver la carta.', 'lose');
+    Casino.toast(error?.message || 'No se pudo jugar Ride the Bus.');
+  }
+}
+
+async function rideBusCashout() {
+  if (!rideBus.live || rideBus.starting) return;
+
+  rideBus.starting = true;
+  rideBusUI();
+  const { data, error } = await supabaseClient.rpc('ride_bus_cashout', {
     p_token: Casino.token
   });
 
   if (error) {
     console.error(error);
+    rideBus.starting = false;
+    rideBusUI();
     Casino.toast(error.message);
     return;
   }
 
-  hilo.live = false;
-  hilo.pot = 0;
-  hiloUI();
-  hiloFeedback('Bote cobrado · buen momento para retirarse.', 'win');
+  rideBus.live = false;
+  rideBus.starting = false;
+  rideBus.round = 0;
+  rideBus.pot = 0;
+  Casino.setBalance(data.coins);
+  rideBusUI();
+  rideBusFeedback('Bote cobrado · te bajas del autobús.', 'win');
   playCardSound('cash');
-  Casino.showGameResult(data, 'Higher / Lower');
-};
+  Casino.showGameResult(data, 'Ride the Bus');
+}
 
-hiloIdle();
-hiloUI();
-document.addEventListener('click', event => {
-  if (event.target.closest('#dock')) hiloUI();
-});
+async function refreshRideBus() {
+  if (!Casino.token) return;
+  try {
+    const { data, error } = await supabaseClient.rpc('ride_bus_get_active', {
+      p_token: Casino.token
+    });
+    if (error) throw error;
+
+    if (!data || data.status !== 'live') {
+      rideBusIdle();
+      return;
+    }
+
+    rideBus.bet = Number(data.bet || 0);
+    rideBus.pot = Number(data.pot || 0);
+    rideBus.round = Number(data.round || 1);
+    rideBus.cards = Array.isArray(data.cards) ? data.cards : [];
+    rideBus.live = true;
+    rideBus.starting = false;
+    rideBusShow();
+    rideBusUI();
+    rideBusFeedback(rideBus.round === 1 ? 'Parada 1 · ¿Rojo o negro?'
+      : rideBus.round === 2 ? 'Parada 2 · ¿Mayor o menor?'
+      : rideBus.round === 3 ? 'Parada 3 · ¿Dentro o fuera?'
+      : 'Parada 4 · elige el palo', 'ready');
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+$('#bus-start').onclick = rideBusStart;
+$('#bus-cash').onclick = rideBusCashout;
+window.refreshRideBus = refreshRideBus;
+rideBusIdle();
