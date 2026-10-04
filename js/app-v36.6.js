@@ -74,8 +74,6 @@ const Casino = {
     }
     const profileLevelBadge = $('#profile-level-badge');
     if (profileLevelBadge) profileLevelBadge.textContent = Number(this.profile.level || 1);
-    const tttStake = $('#ttt-stake-info');
-    if (tttStake && !this.stake) tttStake.innerHTML = 'Apuesta de la partida: <b>0 FP</b>. Usa las fichas de abajo antes de crearla.';
 
     const step = now => {
       const k = Math.min(1, (now - t0) / 400);
@@ -197,8 +195,9 @@ const Casino = {
 
     // La tragaperras y la ruleta de la fortuna tienen sus propios controles.
     // Durante Road Rush no permitimos cambiar la apuesta ya iniciada.
+    const connect4Playing = multiplayerTab && typeof window.connect4IsPlaying === 'function' && window.connect4IsPlaying();
     const dock = $('#dock');
-    if (dock) dock.classList.toggle('slot-hidden', slots || fortune || roadActive || minesActive || dinosaurActive);
+    if (dock) dock.classList.toggle('slot-hidden', slots || fortune || roadActive || minesActive || dinosaurActive || connect4Playing);
 
     document.querySelectorAll('.chip').forEach(chip => {
       chip.classList.toggle('on', roulette && Number(chip.dataset.v) === this.chip);
@@ -206,37 +205,30 @@ const Casino = {
 
     const table = typeof window.onTable === 'function' ? window.onTable() : 0;
 
-    const pokerTable = activeTab === 'poker' && typeof window.isPokerTableActive === 'function' && window.isPokerTableActive();
     const minesTab = activeTab === 'mines';
     const rideBusTab = activeTab === 'ridebus';
+    const multiplayerTab = activeTab === 'multiplayer';
     const roadTab = activeTab === 'road';
 
     // Los límites de stake son específicos de cada juego.
     // IMPORTANTE: el saldo NO recorta visualmente la apuesta preparada.
     // El servidor comprueba si hay saldo suficiente al iniciar la partida.
-    if (!pokerTable) {
-      const gameCap = minesTab ? 250 : rideBusTab ? 1000 : roadTab ? 500 : null;
-      if (gameCap !== null) this.stake = Math.min(this.stake, gameCap);
-    }
+    const gameCap = minesTab ? 250 : rideBusTab ? 1000 : roadTab ? 500 : null;
+    if (gameCap !== null) this.stake = Math.min(this.stake, gameCap);
 
   const clearButton = $('#dclr');
-  if (clearButton) clearButton.title = pokerTable ? 'Volver a la subida mínima' : 'Reiniciar apuesta';
+  if (clearButton) clearButton.title = 'Reiniciar apuesta';
+  const c4SelectedStake = $('#c4-selected-stake');
+  if (c4SelectedStake) c4SelectedStake.textContent = `${this.stake} FP`;
+
   $('#dockv').innerHTML = roulette
       ? `Ficha: <b>${this.chip}</b> FP<br>En mesa: <b>${table}</b> FP`
-      : pokerTable
-        ? `Subir a: <b>${Number($('#poker-raise-amount')?.value || 0)}</b> FP<br>Elige fichas`
-        : minesTab
+      : minesTab
           ? `Apuesta: <b>${this.stake}</b> FP<br>Máximo: <b>250 FP</b>`
           : rideBusTab
             ? `Apuesta: <b>${this.stake}</b> FP<br>Máximo: <b>1000 FP</b>`
             : `Apuesta: <b>${this.stake}</b> FP<br>Elige una ficha`;
 
-    const tttStake = $('#ttt-stake-info');
-    if (tttStake) {
-      tttStake.innerHTML = this.stake > 0
-        ? `Apuesta de la partida: <b>${this.stake} FP</b>`
-        : 'Apuesta de la partida: <b>0 FP</b>. Usa las fichas de abajo antes de crearla.';
-    }
   }
 };
 
@@ -327,10 +319,10 @@ async function start(user) {
   if (window.initFortune) await window.initFortune();
   if (window.initShop) await window.initShop();
   if (window.initChat) await window.initChat();
-  if (window.initMultiplayer) await window.initMultiplayer();
   if (window.initDinosaurio) window.initDinosaurio();
   if (window.initSidebar) await window.initSidebar();
   if (window.refreshRideBus) await window.refreshRideBus();
+  if (window.initConnect4) await window.initConnect4();
 }
 
 async function restoreSession() {
@@ -356,6 +348,7 @@ function showLogin() {
   if (window.stopRoad) window.stopRoad();
   if (window.stopDinosaurio) window.stopDinosaurio();
   if (window.stopShop) window.stopShop();
+  if (window.stopConnect4) window.stopConnect4();
   $('#app').classList.add('hidden');
   $('#login').classList.remove('hidden');
   Casino.user = null;
@@ -411,19 +404,17 @@ for (const [value, chipColor] of CHIPS) {
   button.style.setProperty('--c', chipColor);
 
   button.onclick = () => {
+    if (typeof window.connect4IsPlaying === 'function' && window.connect4IsPlaying()) return;
     const activeTab = currentCasinoTab();
     const roulette = activeTab === 'roulette';
     const minesTab = activeTab === 'mines';
     const rideBusTab = activeTab === 'ridebus';
+    const multiplayerTab = activeTab === 'multiplayer';
     const roadTab = activeTab === 'road';
     const minesActive = activeTab === 'mines' && typeof window.isMinesActive === 'function' && window.isMinesActive();
-    const pokerTable = activeTab === 'poker' && typeof window.isPokerTableActive === 'function' && window.isPokerTableActive();
 
     if (roulette) {
       Casino.chip = value;
-    } else if (pokerTable && typeof window.pokerAddChip === 'function') {
-      window.pokerAddChip(value);
-      return;
     } else {
       if (minesActive) return;
       const maxStake = minesTab ? 250 : rideBusTab ? 1000 : roadTab ? 500 : Number.MAX_SAFE_INTEGER;
@@ -446,11 +437,6 @@ for (const [value, chipColor] of CHIPS) {
 
 $('#dclr').onclick = () => {
   const activeTab = currentCasinoTab();
-  const pokerTable = activeTab === 'poker' && typeof window.isPokerTableActive === 'function' && window.isPokerTableActive();
-  if (pokerTable && typeof window.pokerClearRaise === 'function') {
-    window.pokerClearRaise();
-    return;
-  }
   Casino.stake = 0;
   const roadTab = activeTab === 'road';
   Casino.dock();
@@ -487,10 +473,10 @@ $('#nav').onclick = event => {
   if (tab === 'fortune' && window.refreshFortuneStatus) window.refreshFortuneStatus();
   if (tab === 'road' && window.refreshRoad) window.refreshRoad();
   if (tab === 'ridebus' && window.refreshRideBus) window.refreshRideBus();
+  if (tab === 'multiplayer' && window.refreshConnect4) window.refreshConnect4();
   if (tab === 'mines' && window.refreshMines) window.refreshMines();
   if (tab === 'dinosaur' && window.refreshDinosaurStatus) window.refreshDinosaurStatus();
   if (tab === 'shop' && window.refreshShop) window.refreshShop();
-  if (tab === 'multiplayer' && window.loadMatches) window.loadMatches();
 };
 
 // ------------------------------------------------------------

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>The Pedro &amp; Paco Casino</title>
-  <link rel="stylesheet" href="css/style.css?v=36.8">
+  <link rel="stylesheet" href="css/style.css?v=36.14">
 </head>
 <body>
   <main id="login" class="panel">
@@ -586,138 +586,75 @@
         <div>
           <span class="game-kicker">♠ ♣ EN DIRECTO ♣ ♠</span>
           <h2>Multijugador <span class="multi-beta-badge">BETA</span></h2>
-          <p class="hint">Elige un juego, crea una mesa y juega en tiempo real con otros jugadores.</p>
+          <p class="hint">Juega partidas privadas, apuesta FP y compite en tiempo real.</p>
         </div>
-        <div class="multi-online-badge"><span class="live-dot"></span> Mesas online</div>
       </div>
 
-      <div id="multi-hub" class="multi-hub">
-        <button class="multi-game-card active" data-multi-game="ttt">
-          <span class="multi-game-icon">⭕</span>
-          <span class="multi-game-name">Tres en raya</span>
-          <span class="multi-game-meta">1 VS 1 · con apuesta</span>
-        </button>
-        <button class="multi-game-card" data-multi-game="poker">
-          <span class="multi-game-icon">🃏</span>
-          <span class="multi-game-name">Texas Hold'em</span>
-          <span class="multi-game-meta">2–6 jugadores · Poker</span>
-        </button>
-      </div>
-
-      <div id="multi-game-ttt" class="multi-subview">
-        <div class="multi-subview-head">
-          <div>
-            <span class="game-kicker">⭕ CLÁSICO ONLINE</span>
-            <h3>Tres en raya</h3>
+      <div id="c4-lobby-view" class="c4-view">
+        <div class="c4-lobby-grid">
+          <div class="c4-create-panel">
+            <div class="c4-panel-kicker">4 EN RAYA · SALAS</div>
+            <h3>Crea una partida</h3>
+            <p>Elige tu apuesta con las fichas de abajo. La apuesta queda fijada para los dos jugadores cuando alguien entre.</p>
+            <div class="c4-create-stake"><span>APUESTA SELECCIONADA</span><strong id="c4-selected-stake">0 FP</strong></div>
+            <button id="c4-create" type="button" class="main c4-primary">CREAR SALA <span>＋</span></button>
+            <button id="c4-refresh" type="button" class="c4-refresh-button">↻ Actualizar salas</button>
           </div>
-          <button class="multi-back-hub">← Juegos</button>
+
+          <div class="c4-rooms-panel">
+            <div class="c4-section-head"><div><span>SALAS ABIERTAS</span><h3>Encuentra rival</h3></div><span class="c4-live-pill">● EN DIRECTO</span></div>
+            <div id="c4-feedback" class="c4-feedback" aria-live="polite"></div>
+            <div id="c4-rooms" class="c4-rooms"><div class="c4-lobby-empty"><div class="c4-empty-orb">4</div><h3>Cargando salas…</h3></div></div>
+          </div>
         </div>
-        <p id="ttt-stake-info" class="ttt-stake-info">Apuesta de la partida: <b>0 FP</b>. Usa las fichas de abajo antes de crearla.</p>
-        <div class="multi-grid">
-          <div>
-            <div class="row multi-actions">
-              <button id="ttt-create" class="main">Crear partida</button>
-              <button id="ttt-refresh">Actualizar</button>
-            </div>
-            <div id="ttt-status" class="status-box">No estás en una partida.</div>
-            <div id="ttt-lobby" class="lobby"></div>
-          </div>
 
-          <div>
-            <div id="ttt-board" class="ttt-board"></div>
-            <p id="ttt-turn" class="ttt-turn">Crea o únete a una partida.</p>
+        <div class="c4-coming-soon">
+          <div><span>PRÓXIMAMENTE</span><h3>Más juegos multijugador</h3><p>Estamos preparando nuevas mesas para ampliar la zona competitiva.</p></div>
+          <div class="c4-coming-grid">
+            <div><b>♞</b><span>Damas</span><small>EN DESARROLLO</small></div>
+            <div><b>🎳</b><span>Bolos</span><small>EN DESARROLLO</small></div>
+            <div><b>🃏</b><span>Duelo de cartas</span><small>EN DESARROLLO</small></div>
           </div>
         </div>
       </div>
 
-      <div id="multi-game-poker" class="multi-subview hidden">
-        <div class="multi-subview-head">
-          <div>
-            <span class="game-kicker">♠ NO-LIMIT TEXAS HOLD'EM ♠</span>
-            <h3>Poker</h3>
+      <div id="c4-match-view" class="c4-view hidden">
+        <div class="c4-match-shell">
+          <div class="c4-match-head">
+            <div><span>4 EN RAYA · PARTIDA</span><h3>Duelo en directo</h3></div>
+            <div class="c4-match-stats"><div><span>APUESTA</span><b id="c4-stake">0 FP</b></div><div><span>BOTE</span><b id="c4-pot">0 FP</b></div><div><span>TU COLOR</span><b id="c4-my-color">—</b></div></div>
           </div>
-          <button class="multi-back-hub">← Juegos</button>
+
+          <div class="c4-players">
+            <div id="c4-red-player"></div>
+            <div class="c4-vs"><span>VS</span><small id="c4-status-label">ESPERANDO OPONENTE</small></div>
+            <div id="c4-blue-player"></div>
+          </div>
+
+          <div class="c4-board-wrap">
+            <div class="c4-board-glow"></div>
+            <div class="c4-column-labels" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span></div>
+            <div id="c4-board" class="c4-board" role="grid" aria-label="Tablero de 4 en raya"></div>
+            <div class="c4-board-foot"><span>Haz clic en una columna para soltar tu ficha</span><span>7 × 6</span></div>
+          </div>
+
+          <div class="c4-match-actions">
+            <button id="c4-resign" type="button" class="c4-danger" disabled>RENDIRSE</button>
+            <button id="c4-back-lobby" type="button" class="c4-secondary">SALIR DE LA SALA</button>
+          </div>
         </div>
 
-        <div id="poker-lobby-view">
-          <div class="poker-create-panel">
-            <div>
-              <span class="poker-kicker">CREA TU MESA</span>
-              <h4>Abre una partida</h4>
-              <p class="hint">Hasta 6 jugadores · ciegas 1 / 2 FP · el anfitrión inicia la partida.</p>
-            </div>
-            <div class="poker-create-fields">
-              <label>Nombre de mesa<input id="poker-table-name" maxlength="28" value="Mesa de lujo"></label>
-              <label>Entrada<select id="poker-buy-in"><option value="20">20 FP</option><option value="50" selected>50 FP</option><option value="100">100 FP</option><option value="250">250 FP</option><option value="500">500 FP</option></select></label>
-              <div class="poker-seat-limit"><span>AFORO</span><strong>Hasta 6 jugadores</strong><small>El anfitrión decide cuándo empezar.</small></div>
-              <button id="poker-create" class="main">Crear mesa</button>
-            </div>
+        <div id="c4-toss-overlay" class="c4-overlay hidden" aria-live="polite">
+          <div class="c4-toss-card">
+            <span class="c4-toss-kicker">SE DECIDE EL PRIMER TURNO</span>
+            <div id="c4-toss-coin" class="c4-toss-coin"><span class="coin-front">ROJO</span><span class="coin-back">AZUL</span></div>
+            <strong id="c4-toss-result" class="c4-toss-result">La moneda decide quién empieza…</strong>
           </div>
-          <div class="poker-lobby-heading"><span>MESAS ABIERTAS</span><button id="poker-refresh">Actualizar</button></div>
-          <div id="poker-lobby" class="poker-lobby"></div>
         </div>
 
-        <div id="poker-table-view" class="hidden">
-          <div class="poker-table-head">
-            <div><span id="poker-table-sub" class="poker-kicker">MESA</span><h4 id="poker-table-title">Texas Hold'em</h4></div>
-            <div class="poker-head-actions"><button id="poker-leave">Salir de la mesa</button></div>
-          </div>
-
-          <div id="poker-waiting-room" class="poker-waiting-room hidden">
-            <div class="poker-waiting-copy">
-              <span class="poker-kicker">SALA DE ESPERA</span>
-              <h4 id="poker-waiting-title">Mesa preparada</h4>
-              <p>Los jugadores pueden entrar hasta un máximo de 6. El anfitrión decide cuándo empezar.</p>
-            </div>
-            <div class="poker-waiting-players-head"><span>JUGADORES EN LA MESA</span><strong id="poker-waiting-count">0 / 6</strong></div>
-            <div id="poker-waiting-players" class="poker-waiting-players"></div>
-            <div class="poker-waiting-actions">
-              <button id="poker-start-hand" class="main">♠ Empezar partida</button>
-              <span id="poker-waiting-message" class="poker-waiting-hint">Esperando jugadores…</span>
-            </div>
-          </div>
-
-          <div id="poker-table" class="poker-table">
-            <div class="poker-light-ring"></div>
-            <div id="poker-result-banner" class="poker-result-banner hidden"></div>
-            <div class="poker-pot-display"><span>BOTE</span><strong id="poker-pot">0 FP</strong></div>
-            <div class="poker-community" id="poker-community"></div>
-            <div class="poker-deck-visual" aria-hidden="true"><span></span><span></span><span></span><b>DECK</b></div>
-            <div class="poker-dealer-message"><span>DEALER</span><b id="poker-dealer-text">El dealer está preparado.</b></div>
-            <div id="poker-seats" class="poker-seats"></div>
-            <div id="poker-action-line" class="poker-action-line">Esperando jugadores…</div>
-          </div>
-
-          <div class="poker-my-hand-panel">
-            <div class="poker-my-head"><div><span>MI MANO</span><strong id="poker-my-hand-name">—</strong></div><div class="poker-my-stack"><span>STACK</span><b id="poker-my-stack">0 FP</b></div></div>
-            <div id="poker-hole-cards" class="poker-hole-cards"></div>
-          </div>
-
-          <div class="poker-actions-panel">
-            <div class="poker-bet-summary">
-              <div class="poker-to-call" id="poker-to-call">A pagar: 0 FP</div>
-              <div class="poker-raise-summary">SUBIDA · <b id="poker-raise-preview">—</b></div>
-            </div>
-            <div class="poker-raise-box">
-              <label>Subir a <input id="poker-raise-amount" type="number" min="2" step="1" value="6"></label>
-              <button id="poker-raise-min" type="button">MÍN.</button>
-              <button id="poker-raise-pot" type="button">BOTE</button>
-            </div>
-            <div class="poker-action-buttons">
-              <button id="poker-fold" class="danger">Retirarse</button>
-              <button id="poker-check">Pasar</button>
-              <button id="poker-call">Pagar</button>
-              <button id="poker-raise" class="main">Subir</button>
-              <button id="poker-allin" class="allin-action">ALL-IN</button>
-            </div>
-            <p class="poker-chip-help">Usa las fichas de abajo para sumar rápidamente a tu subida.</p>
-          </div>
-
-          <div class="poker-table-bottom">
-            <button id="poker-next-hand" class="main hidden">♠ Nueva mano</button>
-            <button id="poker-rebuy">Recomprar entrada</button>
-            <span id="poker-status" class="poker-status">Esperando al menos 2 jugadores con stack.</span>
-          </div>
+        <div id="c4-result" class="c4-result hidden">
+          <div id="c4-result-icon" class="c4-result-icon">✓</div>
+          <div><span class="c4-result-kicker">PARTIDA TERMINADA</span><h3 id="c4-result-title">¡VICTORIA!</h3><p id="c4-result-copy"></p></div>
         </div>
       </div>
     </section>
@@ -731,7 +668,7 @@
       </section>
     </div>
 
-    <div id="dock" data-casino-build="v36.13">
+    <div id="dock" data-casino-build="v36.15">
       <div id="chips"></div>
       <div id="dockv"></div>
       <button id="dclr" title="Reiniciar apuesta">↺</button>
@@ -744,15 +681,14 @@
   <script src="js/fortune.js?v=36.6"></script>
   <script src="js/dino.js?v=36.6"></script>
   <script src="js/shop.js?v=36.6"></script>
-  <script src="js/app-v36.6.js?v=36.7"></script>
+  <script src="js/connect4-v36.15.js?v=36.15"></script>
+  <script src="js/app-v36.6.js?v=36.15"></script>
   <script src="js/profile.js?v=36.6"></script>
   <script src="js/sidebar.js?v=36.6"></script>
   <script src="js/chat.js?v=36.6"></script>
-  <script src="js/multiplayer.js?v=36.6"></script>
   <script src="js/games-v36.10.js?v=36.12"></script>
   <script src="js/slots.js?v=36.6"></script>
   <script src="js/mines.js?v=36.6"></script>
-  <footer class="site-version" aria-label="Versión del sitio"><span>v36.13</span><i>•</i><span>STABLE</span></footer>
-  <script src="js/poker.js?v=36.6"></script>
+  <footer class="site-version" aria-label="Versión del sitio"><span>v36.15</span><i>•</i><span>STABLE</span></footer>
 </body>
 </html>

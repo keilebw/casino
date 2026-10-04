@@ -14,7 +14,6 @@ DECLARE
   v_name text;
   v_tables text[] := ARRAY[
     'chat_messages',
-    'matches',
     'bets',
     'road_rush_games',
     'mines_games',

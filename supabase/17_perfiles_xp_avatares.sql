@@ -217,7 +217,7 @@ begin
 end;
 $$;
 
--- 7) Mapa público ligero para que chat, Poker y juegos 1v1 puedan
+-- 7) Mapa público ligero para que chat y otros sistemas del perfil puedan
 -- mostrar el avatar sin exponer contraseñas ni sesiones.
 create or replace function public.get_public_profiles(p_token text)
 returns jsonb

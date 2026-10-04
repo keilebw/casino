@@ -1,0 +1,1 @@
+V36.14 – Reinicio del área Multijugador. Los juegos multijugador anteriores fueron retirados del frontend y de Supabase; la sección queda preparada para nuevos juegos.
