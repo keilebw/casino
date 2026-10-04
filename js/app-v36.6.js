@@ -195,6 +195,8 @@ const Casino = {
 
     // La tragaperras y la ruleta de la fortuna tienen sus propios controles.
     // Durante Road Rush no permitimos cambiar la apuesta ya iniciada.
+    // V36.16: multiplayerTab debe declararse antes de usarse para evitar TDZ.
+    const multiplayerTab = activeTab === 'multiplayer';
     const connect4Playing = multiplayerTab && typeof window.connect4IsPlaying === 'function' && window.connect4IsPlaying();
     const dock = $('#dock');
     if (dock) dock.classList.toggle('slot-hidden', slots || fortune || roadActive || minesActive || dinosaurActive || connect4Playing);
@@ -207,7 +209,6 @@ const Casino = {
 
     const minesTab = activeTab === 'mines';
     const rideBusTab = activeTab === 'ridebus';
-    const multiplayerTab = activeTab === 'multiplayer';
     const roadTab = activeTab === 'road';
 
     // Los límites de stake son específicos de cada juego.
@@ -231,6 +232,9 @@ const Casino = {
 
   }
 };
+
+// API pública para los módulos secundarios (chat, sidebar, multijugador, etc.).
+window.Casino = Casino;
 
 function escapeHtml(value) {
   return String(value)

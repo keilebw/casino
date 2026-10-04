@@ -44,6 +44,7 @@ nav{display:flex;gap:.4rem;flex-wrap:wrap}
 .cell.vert{font-size:.78rem}.cell.hit{animation:hit 1s 3;z-index:3}
 .cell .st{position:absolute;right:2px;top:2px;min-width:26px;height:26px;border-radius:50%;background:radial-gradient(circle,#2a62d1 50%,#fff 52% 58%,#2a62d1 60%);border:2px dashed #fffd;font:700 .7rem system-ui;color:#fff;display:grid;place-items:center;animation:drop .3s;box-shadow:0 3px 5px #000a}
 .diam{width:34px;height:16px;transform:skewX(0);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.red-diam{background:#c42b3f}.black-diam{background:#111}
 /* cartas */
 .hand{display:flex;flex-wrap:wrap;min-height:104px;justify-content:center;perspective:700px}
 .hand.mid{min-height:140px}.hand.mini{min-height:44px}.hand.mini .card{width:30px;height:44px;font-size:.7rem;padding:2px;margin:2px}.hand.mini .card i{font-size:.9rem}
