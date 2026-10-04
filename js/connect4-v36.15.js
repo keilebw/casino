@@ -173,26 +173,26 @@
       return;
     }
 
-    const enteringToss = lastStatus !== 'tossing';
     const target = state?.toss_color === 'red' ? 'ROJO' : 'AZUL';
-    if (enteringToss) {
-      result.textContent = 'La moneda decide quién empieza…';
+    // La animación se dispara una sola vez por lanzamiento, aunque el polling
+    // consulte el estado varias veces mientras la moneda está en el aire.
+    if (!tossStarted && !tossTimer) {
+      result.textContent = 'Lanzando la moneda…';
       result.className = 'c4-toss-result';
       coin.dataset.face = '';
       coin.classList.remove('flip');
       void coin.offsetWidth;
       coin.classList.add('flip');
 
-      clearTimeout(tossTimer);
       tossTimer = setTimeout(async () => {
-        coin.dataset.face = state?.toss_color || '';
+        tossTimer = null;
+        if (!state || state.status !== 'tossing') return;
+        coin.dataset.face = state.toss_color || '';
         result.textContent = `HA SALIDO ${target}`;
-        result.classList.add(state?.toss_color === 'red' ? 'red' : 'blue');
-        if (!tossStarted) {
-          tossStarted = true;
-          await beginToss();
-        }
-      }, 1550);
+        result.className = `c4-toss-result ${state.toss_color === 'red' ? 'red' : 'blue'}`;
+        tossStarted = true;
+        await beginToss();
+      }, 1700);
     }
   }
 
@@ -301,7 +301,10 @@
     const board = Array.isArray(state.board) ? state.board : [];
     const c = Number(col);
     if (!Number.isInteger(c) || c < 0 || c > 6) return;
-    if (board[c] || board[c + 7] || board[c + 14] || board[c + 21] || board[c + 28] || board[c + 35]) return;
+    // En Connect 4 una columna solo está llena si su casilla superior (fila 0)
+    // está ocupada. Antes se comprobaban las 6 posiciones y eso bloqueaba toda
+    // columna en cuanto caía la primera ficha.
+    if (Number(board[c] || 0) !== 0) return;
     busy = true;
     setMessage('');
     const { data, error } = await supabaseClient.rpc('connect4_move', { p_token: window.Casino.token, p_room_id: roomId, p_column: c });
